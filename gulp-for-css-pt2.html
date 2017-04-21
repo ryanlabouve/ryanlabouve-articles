@@ -1,0 +1,128 @@
+<div class="post lg-px4">
+  <ul>
+    <li>Different development and production stylesheets
+      <ul>
+        <li>Development: easy to debug</li>
+        <li>Production: minified</li>
+      </ul>
+    </li>
+    <li>Start automating repetitive tasks</li>
+  </ul>
+  <p>I <a href="http://ryanlabouve.com/sophisticating-your-css/">recently evangelized</a> using a task runner as a necessity in your front-end workflow.</p>
+  <p>In <a href="http://ryanlabouve.com/gulp-for-css-part-1">part 1</a> we installed Gulp, compiled SASS, and set up a local server with live reload. Now let’s focus on separating development and production stylesheets; optimizing development for rapid changes
+    and debugging, and production to be as small as possible.</p>
+  <p>Here’s where we left off last time: <a href="https://github.com/ryanlabouve/gulp-for-css/releases/tag/v0.5">Code Checkpoint</a></p>
+  <h2 id="separate-development-from-production">Separate Development from Production</h2>
+  <p>Make an independent <code>build</code> task.</p>
+  <pre><code class="hljs cs">    <span class="hljs-comment">// gulpfile.js</span>
+    <span class="hljs-comment">// requires...</span>
+    <span class="hljs-comment">// tasks...</span>
+    gulp.task(<span class="hljs-string">'build'</span>, [<span class="hljs-string">'sass'</span>]);
+    gulp.task(<span class="hljs-string">'default'</span>, [<span class="hljs-string">'sass'</span>, <span class="hljs-string">'watch'</span>, <span class="hljs-string">'connect'</span>]);
+</code></pre>
+  <p>Our default task will continue to take advantage of LiveReload and Watch for development. The <code>build</code> task will allow us to reuse certain tasks and include different production-specific tasks.</p>
+  <h3 id="production-css">Production CSS</h3>
+  <h4 id="minification-for-production">Minification for Production</h4>
+  <p>Production is all about speed. Our CSS doesn’t need comments or spaces, or even to be human readable.</p>
+  <p>As many projects do, we’ll aim to produce a <code>app.min.css</code> inside a <code>dist/css</code> folder.</p>
+  <p>We’ll use <a href="https://www.npmjs.org/package/gulp-minify-css/">gulp-minify-css</a> to minify the css and <a href="https://www.npmjs.org/package/gulp-rename/">gulp-rename</a> to rename the file with a <code>.min</code> suffix.</p>
+  <p>Our <code>dist/css</code> folder should have both a minified and un-minified version, so the unminified version could be used as a reference.</p>
+  <pre><code class="hljs sql">npm <span class="hljs-operator"><span class="hljs-keyword">install</span> gulp-minify-css <span class="hljs-comment">--save-dev</span>
+npm <span class="hljs-keyword">install</span> gulp-<span class="hljs-keyword">rename</span> <span class="hljs-comment">--save-dev</span>
+</span></code></pre>
+  <p>We’ll make a new task called <code>sass-minify</code> to take <code>css/app.css</code> from our original <code>sass</code> task, rename it, and minify it.</p>
+  <p>Only add <code>sass-minify</code> to our <code>build</code> task, since we don’t need to generate these files in development.</p>
+  <pre><code class="hljs javascript"><span class="hljs-comment">// gulpfiles.js</span>
+<span class="hljs-comment">// Requires...</span>
+
+gulp.task(<span class="hljs-string">'sass-minify'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
+    <span class="hljs-keyword">return</span> gulp.src(<span class="hljs-string">'css/app.css'</span>)
+        <span class="hljs-comment">// First, save the unminified version</span>
+        .pipe(gulp.dest(<span class="hljs-string">'dist/css'</span>))
+        <span class="hljs-comment">// Now rename</span>
+        .pipe(rename({suffix: <span class="hljs-string">'.min'</span>}))
+        <span class="hljs-comment">// Actually minify the file</span>
+        .pipe(minifycss())
+        <span class="hljs-comment">// And then save it again with its new name</span>
+        .pipe(gulp.dest(<span class="hljs-string">'dist/css'</span>));
+});
+
+<span class="hljs-comment">//Tasks...</span>
+
+<span class="hljs-comment">// be sure sass-minify happens after sass</span>
+gulp.task(<span class="hljs-string">'build'</span>, [<span class="hljs-string">'sass'</span>, <span class="hljs-string">'sass-minify'</span>]);
+<span class="hljs-comment">//...</span>
+</code></pre>
+  <p>Now you can run <code>gulp build</code> and verify the output in <code>dist/css</code>.</p>
+  <h3 id="development-css">Development CSS</h3>
+  <h4 id="linting-our-scss">Linting our SCSS</h4>
+  <p>In development linting encourages/enforces coding in a specific style.</p>
+  <p>We’ll use <a href="https://www.npmjs.org/package/gulp-scss-lint">gulp-css-lint</a> to do the linting.</p>
+  <pre><code class="hljs sql">npm <span class="hljs-operator"><span class="hljs-keyword">install</span> gulp-scss-lint <span class="hljs-comment">--save-dev</span>
+</span></code></pre>
+  <p>CSS has a lot of opinions about style and not a lot of rules. So we’ll have to do a bit of configuration to get our linter to report the errors we want.</p>
+  <p>By default, the <code>gulp-css-lint</code> plugin uses this yml file: <a href="https://github.com/causes/scss-lint/blob/master/config/default.yml">github.com/causes/…/config/default.yml</a>.</p>
+  <p>I’ve customized mine a bit. You can see it here: <a href="https://github.com/ryanlabouve/gulp-for-css/blob/master/.scss-lint.yml">scss-lint.yml</a>. This goes in the root of the project.</p>
+  <p>You’ll probably want to customize this as well. It doesn’t have to be perfect right away. Just make tweaks as you go and aim to keep your CSS as consistent as possible.</p>
+  <p>If you are looking for some guidance on how your css should be formatted, check out <a href="https://github.com/necolas/idiomatic-css">idiomatic css</a> or <a href="http://cssguidelin.es/">cssguidelin.es</a>.</p>
+  <pre><code class="hljs javascript"><span class="hljs-comment">// gulpfile.js</span>
+<span class="hljs-comment">//...</span>
+gulp.task(<span class="hljs-string">'sass-lint'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
+    <span class="hljs-keyword">return</span> gulp.src(<span class="hljs-string">'scss/app.scss'</span>)
+        .pipe(scss({
+            <span class="hljs-string">'config'</span>: <span class="hljs-string">'.scss-lint.yml'</span>
+        }));
+});
+<span class="hljs-comment">//..</span>
+</code></pre>
+  <h2 id="automation">Automation</h2>
+  <p>At this point we have completely different branches of tasks for development and production. Here’s a <a href="https://github.com/ryanlabouve/gulp-for-css/releases/tag/v0.6">code checkpoint</a>.</p>
+  <p>Our next step is to start automating things to make authoring easier and faster.</p>
+  <h3 id="autoprefixer">Autoprefixer</h3>
+  <p>Let’s start with auto-prefixing.</p>
+  <p>Auto-prefixing means automatically applying vendor prefixes to your code, which allows you to use newer CSS features (like flexbox, transition, and transform) in modern browsers.</p>
+  <blockquote>
+    <p>…the point of vendor prefixes was to allow browser makers to start supporting experimental CSS declarations. <a href="http://www.quirksmode.org/blog/archives/2010/03/css_vendor_pref.html#link1">source</a></p>
+  </blockquote>
+  <p>Vendor prefixes, good or bad, are still a reality of authoring css. Applying these things manually is a terrible hassle.</p>
+  <p>Instead of writing:</p>
+  <pre><code class="hljs css"><span class="hljs-class">.effect</span> <span class="hljs-rules">{
+    <span class="hljs-rule"><span class="hljs-attribute">transform</span>:<span class="hljs-value"> <span class="hljs-function">rotate</span>(<span class="hljs-number">10deg</span>) <span class="hljs-function">rotateY</span>(<span class="hljs-number">50deg</span>)</span></span>;
+    <span class="hljs-rule"><span class="hljs-attribute">transition</span>:<span class="hljs-value"> all <span class="hljs-number">0.3s</span> ease-in</span></span>;
+}</span>
+</code></pre>
+  <p>We are forced to write:</p>
+  <pre><code class="hljs css"><span class="hljs-class">.effect</span> <span class="hljs-rules">{
+  <span class="hljs-rule"><span class="hljs-attribute">-webkit-transform</span>:<span class="hljs-value"> <span class="hljs-function">rotate</span>(<span class="hljs-number">10deg</span>) <span class="hljs-function">rotateY</span>(<span class="hljs-number">50deg</span>)</span></span>;
+     <span class="hljs-rule"><span class="hljs-attribute">-moz-transform</span>:<span class="hljs-value"> <span class="hljs-function">rotate</span>(<span class="hljs-number">10deg</span>) <span class="hljs-function">rotateY</span>(<span class="hljs-number">50deg</span>)</span></span>;
+          <span class="hljs-rule"><span class="hljs-attribute">transform</span>:<span class="hljs-value"> <span class="hljs-function">rotate</span>(<span class="hljs-number">10deg</span>) <span class="hljs-function">rotateY</span>(<span class="hljs-number">50deg</span>)</span></span>;
+  <span class="hljs-rule"><span class="hljs-attribute">-moz-transition</span>:<span class="hljs-value"> all <span class="hljs-number">0.3s</span> ease-in</span></span>;
+       <span class="hljs-rule"><span class="hljs-attribute">transition</span>:<span class="hljs-value"> all <span class="hljs-number">0.3s</span> ease-in</span></span>;
+}</span>
+</code></pre>
+  <p>But using autoprefixer, this code gets generated for us automatically.</p>
+  <p>So let’s get this installed, require the module, and then add it to our sass task.</p>
+  <pre><code class="hljs javascript">npm install gulp-autoprefixer --save-dev
+
+<span class="hljs-comment">// gulpfile.js</span>
+<span class="hljs-comment">// requires...</span>
+<span class="hljs-keyword">var</span> autoprefixer = <span class="hljs-built_in">require</span>(<span class="hljs-string">'gulp-autoprefixer'</span>);
+
+<span class="hljs-comment">// tasks...</span>
+gulp.task(<span class="hljs-string">'sass'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
+    <span class="hljs-keyword">return</span> sass(<span class="hljs-string">'scss/app.scss'</span>, {
+        <span class="hljs-string">'sourcemap'</span>: <span class="hljs-literal">true</span>,
+        <span class="hljs-string">'style'</span>: <span class="hljs-string">'expanded'</span>,
+        <span class="hljs-string">'lineNumbers'</span>: <span class="hljs-literal">true</span>
+    })
+    <span class="hljs-comment">// This one line is all it takes in our task to get it working</span>
+    .pipe(autoprefixer({ browsers: [<span class="hljs-string">'last 2 version'</span>, <span class="hljs-string">'Firefox &lt; 20'</span>, <span class="hljs-string">'&gt; 5%'</span>] }))
+    .pipe(sourcemaps.write())
+    .pipe(gulp.dest(<span class="hljs-string">'css'</span>))
+    .pipe(connect.reload());
+});
+</code></pre>
+  <p>And now our development and production code will be automatically vendor prefixed during the <code>sass</code> task.</p>
+  <p>Here’s information on how to target <a href="https://github.com/postcss/autoprefixer#browsers">other browsers</a>.</p>
+  <p>Next time in part 3 we’ll look at how we can expand our automation to include features for our HTML, Assets, and Javascript using the same patterns we used to get our CSS tasks setup.</p>
+</div>

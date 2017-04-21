@@ -1,0 +1,48 @@
+<div class="post lg-px4">
+  <p>I switched from Wordpress to <a href="http://www.metalsmith.io/">metalsmith</a>.</p>
+  <p>And, instead of having a <em>behind the curtains</em> approach, I decided to just OSS all the things and do it out in the open: <a href="https://github.com/ryanlabouve/ryanlabouve">github.com/ryanlabouve/ryanlabouve</a>.</p>
+  <p>My biggest goals in switching:</p>
+  <ul>
+    <li>Easy to author</li>
+    <li>Easy to deploy</li>
+    <li>Effective version control</li>
+    <li>Versital and customizable enough to explore new technology</li>
+  </ul>
+  <h2 id="enter-metalsmith">Enter Metalsmith</h2>
+  <blockquote>
+    <p>"An extremely simple, pluggable static site generator."</p>
+  </blockquote>
+  <ul>
+    <li>Static Site Generator</li>
+    <li>Plugins for All the Things</li>
+    <li>Very much <em>chose your own adventure</em></li>
+  </ul>
+  <p>Metalsmith is a static site generator written in node. The documentation is not great and most of the tutorials are out of date... so it's hard for me to easily recommend unless you are set on node and wanting to get off the beaten path and/or needing
+    a tool that's flexible enough to customize ultra-customize.</p>
+  <p>For further exploration, some helpful links:</p>
+  <ul>
+    <li><a href="http://blog.andyjiang.com/introduction-to-metalsmith/">http://blog.andyjiang.com/introduction-to-metalsmith/</a></li>
+    <li><a href="http://blakeembrey.com/articles/2014/09/building-a-blog-with-metalsmith/">http://blakeembrey.com/articles/2014/09/building-a-blog-with-metalsmith/</a></li>
+    <li><a href="http://www.okaythree.com/2015/03/building-a-blog-with-metalsmith/">http://www.okaythree.com/2015/03/building-a-blog-with-metalsmith/</a></li>
+  </ul>
+  <h2 id="deploy-with-gh-pages">Deploy with gh-pages</h2>
+  <p>I have a simple shell script that runs the build scripts and pushes the files to github pages.</p>
+  <p>Feel free to checkout the <a href="https://github.com/ryanlabouve/ryanlabouve/blob/master/publish.sh">deploy script</a>.</p>
+  <h2 id="gulp-for-the-rough-edges">Gulp for the rough edges</h2>
+  <p>Metalsmith, while a great static site generator, does not cut it, imo, as a build system.</p>
+  <p>Instead of trying to shoe-horn it into doing so (which is more possible than you'd think) I just used gulp to do additional lifting.</p>
+  <h3 id="local-development">local development</h3>
+  <p>I use <a href="http://www.browsersync.io/">Browser Sync</a> to serve my assets during development.</p>
+  <p>Gulp watches all content and style, running appropriate build tasks as these change</p>
+  <h3 id="running-metalsmith">running metalsmith</h3>
+  <p>I run metalsmith through gulp, and then execute a series of dependent tasks when this finishes (i.e. css and asset related tasks).</p>
+  <h3 id="basscss-postcss-and-cssnext">basscss, postcss, and cssnext</h3>
+  <p>Instead of using SASS, I decided to jump on the new hotness and use postcss.</p>
+  <p>I'm using <a href="http://www.basscss.com/">basscss</a> for css.</p>
+  <p>I copy pasta'd the important parts of <a href="https://github.com/basscss/bassplate">BassPlate</a> to get started and customized from there.</p>
+  <p>From there I use <a href="http://cssnext.io/">cssnext</a> and a few other plugins, as you can see <a href="https://github.com/ryanlabouve/ryanlabouve/blob/master/gulpfile.js#L36">here</a>.</p>
+  <h3 id="no-jquery-or-bootstrap">No jQuery or Bootstrap</h3>
+  <p>Since I killed Wordpress, go pure iconoclast and get rid of jQuery and Bootstrap from my blog.</p>
+  <p class="center serif bold italic mt4">—In Conclusion—</p>
+  <p>Writing a blog should be a tool for learning and a way to share your knowledge with others. So yah, there are some rough edges, and in the early days I spent more time tweaking my build process than I did writing.</p>
+</div>

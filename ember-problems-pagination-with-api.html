@@ -1,0 +1,238 @@
+<div class="post lg-px4">
+  <p>Ember Project: <a href="https://github.com/ryanlabouve/toy-blog">https://github.com/ryanlabouve/toy-blog</a></p>
+  <p>Rails Project: <a href="https://github.com/ryanlabouve/toy-blog-api">https://github.com/ryanlabouve/toy-blog-api</a></p>
+  <p>
+    <style>
+      .embed-container {
+        position: relative;
+        padding-bottom: 56.25%;
+        height: 0;
+        overflow: hidden;
+        max-width: 100%;
+      }
+
+      .embed-container iframe,
+      .embed-container object,
+      .embed-container embed {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </p>
+  <div class="embed-container">
+    <iframe src="https://www.youtube.com/embed//OJWH-BxNZdo" frameborder="0" allowfullscreen=""></iframe>
+  </div>
+  <p></p>
+  <h2 id="jumpstart-the-api">Jumpstart the API</h2>
+  <p>(If you want to know more about how this is setup, check Ember Problems Episode 1.)</p>
+  <p>Go ahead and clone up our play API. It's very similar to Episode 1... go ahead and checkout <code>v0.0.1</code> if you want to follow along.</p>
+  <pre><code class="hljs cpp">git clone https:<span class="hljs-comment">//github.com/ryanlabouve/toy-blog-api</span>
+cd toy-blog-api
+bin/rake db:migrate
+git checkout tags/v0<span class="hljs-number">.0</span><span class="hljs-number">.1</span>
+bundle
+bin/rake db:seeds
+rails s
+</code></pre>
+  <p>You should see posts here: <code>localhost:3000/posts</code></p>
+  <p>And, if you wanna do a little investigation:</p>
+  <pre><code class="hljs cpp">rails c
+Post.all.length <span class="hljs-preprocessor"># =&gt; <span class="hljs-number">2000</span></span>
+</code></pre>
+  <h3 id="connect-to-the-api">Connect to The API</h3>
+  <p>Let's brew up a new ember project for our api. Or, if you would prefer to clone and follow along that way: ryanlabouve/toy-blog</p>
+  <pre><code class="hljs cpp">ember <span class="hljs-keyword">new</span> toy-blog
+
+<span class="hljs-comment">// Get the adapter stuff rolling</span>
+ember install active-model-adapter
+ember generate adapter application
+</code></pre>
+  <p>And then hook it up to the rails api.</p>
+  <pre><code class="hljs javascript"><span class="hljs-comment">// adapters/application.js</span>
+<span class="hljs-keyword">import</span> ActiveModelAdapter <span class="hljs-keyword">from</span> <span class="hljs-string">'active-model-adapter'</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> ActiveModelAdapter.extend({
+  host: <span class="hljs-string">'http://localhost:3000/'</span>
+});
+</code></pre>
+  <p>Go ahead and generate a model and route for out posts so we can see some magic:</p>
+  <pre><code class="hljs nginx"><span class="hljs-title">ember</span> g model post
+ember g route posts
+</code></pre>
+  <p>Set some basic data about our post in the model. All of these fields were previously generated for our API. Checkout the Api <code>db/seeds.rb</code> for more details.</p>
+  <pre><code class="hljs javascript"><span class="hljs-comment">// models/post.js</span>
+<span class="hljs-keyword">import</span> DS <span class="hljs-keyword">from</span> <span class="hljs-string">'ember-data'</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> DS.Model.extend({
+  title: DS.attr(<span class="hljs-string">'string'</span>),
+  body: DS.attr(<span class="hljs-string">'string'</span>),
+  isDraft: DS.attr(<span class="hljs-string">'boolean'</span>),
+  createdAt: DS.attr(<span class="hljs-string">'date'</span>)
+});
+</code></pre>
+  <p>And then the routes to actually load the data from the Api.</p>
+  <pre><code class="hljs javascript"><span class="hljs-comment">// route/posts.js</span>
+<span class="hljs-keyword">import</span> Ember <span class="hljs-keyword">from</span> <span class="hljs-string">'ember'</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> Ember.Route.extend({
+  model() {
+    <span class="hljs-comment">// This uses our adapter connection and</span>
+    <span class="hljs-comment">// the post model to form the query</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.store.find(<span class="hljs-string">'post'</span>);
+  }
+});
+</code></pre>
+  <p>And finally the template:</p>
+  <pre><code class="hljs xml">
+{{! templates/posts.hbs }}
+<span class="hljs-tag">&lt;<span class="hljs-title">div</span> <span class="hljs-attribute">class</span>=<span class="hljs-value">"clearfix"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-title">h1</span> <span class="hljs-attribute">class</span>=<span class="hljs-value">"border-bottom py2 center"</span>&gt;</span>Posts ({{model.length}})<span class="hljs-tag">&lt;/<span class="hljs-title">h1</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-title">div</span>&gt;</span>
+{{#each model as |post|}}
+  <span class="hljs-tag">&lt;<span class="hljs-title">div</span> <span class="hljs-attribute">class</span>=<span class="hljs-value">"p2 border-bottom uppercase"</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-title">div</span> <span class="hljs-attribute">class</span>=<span class="hljs-value">"bold"</span>&gt;</span>{{post.title}}<span class="hljs-tag">&lt;/<span class="hljs-title">div</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-title">p</span>&gt;</span>
+      {{post.body}}
+    <span class="hljs-tag">&lt;/<span class="hljs-title">p</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-title">div</span>&gt;</span>
+{{/each}}
+
+</code></pre>
+  <p>Now we are setup and throwing out 2000 posts on every load. Cool! Let's paginate.</p>
+  <h2 id="on-to-pagination">On to Pagination</h2>
+  <h3 id="step-1-api">Step 1: API</h3>
+  <p>Instead of one large payload, we'll break it up into smaller indexed chunks. This means that data can load substantially faster, but there has to be an additional layer of logic to manage navigating these chunks.</p>
+  <p>There are many ways paginate an API... We'll be adding a 'meta' object, in additional to our root 'post' object, where we'll store meta data about the pagination, like what page we're on and how many results are coming back at one time.</p>
+  <h3 id="adding-kaminari">Adding Kaminari</h3>
+  <p>To simplify break our results into chunks we'll use a gem called <a href="#">kaminari</a>.</p>
+  <blockquote>
+    <p>Kaminari is a "sophisticated paginator for modern web app frameworks and ORMs". Let's go ahead and see what this does in <code>rails console</code>.</p>
+  </blockquote>
+  <pre><code class="hljs nginx"><span class="hljs-comment"># ...</span>
+<span class="hljs-title">gem</span> <span class="hljs-string">'kaminari'</span>
+<span class="hljs-comment"># ...</span>
+</code></pre>
+  <p>Let's see what this does: </p>
+  <pre><code class="hljs cpp"><span class="hljs-preprocessor"># inside rails console</span>
+Post.all.length <span class="hljs-preprocessor"># =&gt; <span class="hljs-number">2000</span></span>
+Post.page(<span class="hljs-number">1</span>).per(<span class="hljs-number">10</span>).length <span class="hljs-preprocessor"># =&gt; <span class="hljs-number">10</span></span>
+Post.page(<span class="hljs-number">1</span>).per(<span class="hljs-number">10</span>) <span class="hljs-preprocessor"># look at results in console</span>
+Post.page(<span class="hljs-number">2</span>).per(<span class="hljs-number">10</span>).length <span class="hljs-preprocessor"># =&gt; <span class="hljs-number">10</span></span>
+Post.page(<span class="hljs-number">2</span>).per(<span class="hljs-number">10</span>) <span class="hljs-preprocessor"># =&gt; # look at results in console</span>
+</code></pre>
+  <h3 id="kaminari-in-our-post-controller">Kaminari in Our Post Controller</h3>
+  <p>Using this we can fragment our results instead of listing them all in one return. To move around the whole collection, we'll use query parameters (e.g. <code>?page=2</code>).</p>
+  <p>First, let's chop up our results from our controller.</p>
+  <pre><code class="hljs ruby"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">PostsController</span> <span class="hljs-inheritance">&lt; <span class="hljs-parent">ApplicationController</span></span></span>
+  <span class="hljs-comment"># ...</span>
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">index</span></span>
+    page_info = {
+      <span class="hljs-symbol">page:</span> params[<span class="hljs-symbol">:page</span>] || <span class="hljs-number">1</span>,
+      <span class="hljs-symbol">per_page:</span> params[<span class="hljs-symbol">:per_page</span>] || <span class="hljs-number">5</span>
+    }
+    <span class="hljs-variable">@posts</span> = <span class="hljs-constant">Post</span>.page(page_info[<span class="hljs-symbol">:page</span>]).per(page_info[<span class="hljs-symbol">:per_page</span>])
+
+    render <span class="hljs-symbol">json:</span> <span class="hljs-variable">@posts</span>, <span class="hljs-symbol">params:</span> page_info
+  <span class="hljs-keyword">end</span>
+
+  <span class="hljs-comment">#  ... Other methods</span>
+<span class="hljs-keyword">end</span>
+</code></pre>
+  <p>Now restart all the things and refresh your Ember app. Only showing 5 Posts!</p>
+  <p>If we look at <a href="http://localhost:3000/posts">http://localhost:3000/posts</a>, we'll see that instead of 2000 results we're just getting back 5. And if we change the url to <a href="http://localhost:3000/posts?page=3">http://localhost:3000/posts?page=3</a>,
+    we'll see a completely different set of <code>posts</code></p>
+  <p>From the front-end, we now have some problems:</p>
+  <ul>
+    <li>How do we navigate to these different URLs? (because currently it does not)</li>
+    <li>How can we correct "total posts"?</li>
+  </ul>
+  <h3 id="the-meta-key">The Meta Key</h3>
+  <p>Adding The Meta Key in Our Serializer will help us fix most of these issues. It allows us to peek outside the actual payload and look at details we return about the larger collection.</p>
+  <pre><code class="hljs ruby"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">PostSerializer</span> <span class="hljs-inheritance">&lt; <span class="hljs-parent">ActiveModel::Serializer</span></span></span>
+  attributes <span class="hljs-symbol">:id</span>, <span class="hljs-symbol">:id</span>, <span class="hljs-symbol">:title</span>, <span class="hljs-symbol">:body</span>, <span class="hljs-symbol">:is_draft</span>, <span class="hljs-symbol">:created_at</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">initialize</span><span class="hljs-params">(object, options={})</span></span>
+
+    meta_key = options[<span class="hljs-symbol">:meta_key</span>] || <span class="hljs-symbol">:meta</span>
+    options[meta_key] ||= {}
+
+    options[meta_key][<span class="hljs-symbol">:pagination</span>] = {
+      <span class="hljs-symbol">page:</span> options[<span class="hljs-symbol">:params</span>][<span class="hljs-symbol">:page</span>].to_i,
+      <span class="hljs-symbol">perPage:</span> options[<span class="hljs-symbol">:params</span>][<span class="hljs-symbol">:per_page</span>],
+      <span class="hljs-symbol">totalPages:</span> (<span class="hljs-constant">Post</span>.all.size/options[<span class="hljs-symbol">:params</span>][<span class="hljs-symbol">:per_page</span>].to_f)
+    }
+
+    <span class="hljs-keyword">super</span>(object, options)
+  <span class="hljs-keyword">end</span>
+<span class="hljs-keyword">end</span>
+</code></pre>
+  <p>See <a href="http://stackoverflow.com/questions/22947721/rails-active-model-serializer-with-pagination">this stack overflow</a> for a little more discussion on what just happened. There are better ways to do it, but this is simple and good enough for
+    us.</p>
+  <p>Now if we refersh <code>http://localhost:3000/posts</code> we'll see our data with an appropriate meta key.</p>
+  <p>Armed with this meta data and a hook to navigate around, we have what we need to jump back into ember and hook up pagination.</p>
+  <h2 id="pagination-in-ember">Pagination in Ember</h2>
+  <p>Update our route to query and refresh model when changes.
+    <a href="http://guides.emberjs.com/v1.10.0/routing/query-params/#toc_opting-into-a-full-transition">http://guides.emberjs.com/v1.10.0/routing/query-params/#toc_opting-into-a-full-transition</a></p>
+  <pre><code class="hljs javascript"><span class="hljs-keyword">import</span> Ember <span class="hljs-keyword">from</span> <span class="hljs-string">'ember'</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> Ember.Route.extend({
+  queryParams: {
+    page: {
+      refreshModel: <span class="hljs-literal">true</span>
+    }
+  },
+  model(params) {
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.store.findQuery(<span class="hljs-string">'post'</span>, params);
+  }
+});
+</code></pre>
+  <p>Update our controller to handle query params:</p>
+  <pre><code class="hljs cs">import Ember <span class="hljs-keyword">from</span> <span class="hljs-string">'ember'</span>;
+
+export <span class="hljs-keyword">default</span> Ember.Controller.extend({
+  queryParams: [
+    <span class="hljs-string">'page'</span>,
+  ],
+  page: <span class="hljs-number">1</span>,
+  metaData: Ember.computed(<span class="hljs-string">'model'</span>, function() {
+    <span class="hljs-keyword">let</span> metadata = <span class="hljs-keyword">this</span>.store.metadataFor(<span class="hljs-string">'post'</span>);
+    <span class="hljs-keyword">return</span> Ember.<span class="hljs-keyword">get</span>(metadata, <span class="hljs-string">'pagination'</span>);
+  }),
+
+  <span class="hljs-preprocessor"># We're not doing any logic here to manage</span>
+  <span class="hljs-preprocessor"># when we are out of pages</span>
+  actions: {
+    nextPage() {
+      <span class="hljs-keyword">let</span> page = <span class="hljs-keyword">this</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">'page'</span>);
+      <span class="hljs-keyword">this</span>.<span class="hljs-keyword">set</span>(<span class="hljs-string">'page'</span>, page + <span class="hljs-number">1</span>);
+    },
+
+    prevPage() {
+      <span class="hljs-keyword">this</span>.<span class="hljs-keyword">set</span>(<span class="hljs-string">'page'</span>, <span class="hljs-keyword">this</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">'page'</span>) - <span class="hljs-number">1</span>);
+    }
+  }
+});
+</code></pre>
+  <p>And just so we can see what's going on, let's expose that Metadata in the template.</p>
+  <pre><code class="hljs cs">
+&lt;div <span class="hljs-keyword">class</span>=<span class="hljs-string">"clearfix"</span>&gt;
+  &lt;a href=<span class="hljs-string">"#"</span> <span class="hljs-keyword">class</span>=<span class="hljs-string">"left btn"</span> {{action <span class="hljs-string">"prevPage"</span>}}&gt;&amp;lt; Prev&lt;/a&gt;
+  &lt;a href=<span class="hljs-string">"#"</span> <span class="hljs-keyword">class</span>=<span class="hljs-string">"right btn"</span> {{action <span class="hljs-string">"nextPage"</span>}}&gt;Next &amp;gt;&lt;/a&gt;
+  &lt;h1 <span class="hljs-keyword">class</span>=<span class="hljs-string">"border-bottom py2 center"</span>&gt;Posts ({{metaData.total}})&lt;/h1&gt;
+  pages: {{metaData.page}} / {{metaData.totalPages}}&lt;br&gt;
+&lt;/div&gt;
+{{<span class="hljs-preprocessor">#each model as |post|}}</span>
+  &lt;div <span class="hljs-keyword">class</span>=<span class="hljs-string">"p2 border-bottom uppercase"</span>&gt;
+    &lt;div <span class="hljs-keyword">class</span>=<span class="hljs-string">"bold"</span>&gt;{{post.title}}&lt;/div&gt;
+    &lt;p&gt;
+      {{post.body}}
+    &lt;/p&gt;
+  &lt;/div&gt;
+{{/each}}
+
+</code></pre>
+  <p>Next time, we'll look at how to infiniscroll!</p>
+</div>

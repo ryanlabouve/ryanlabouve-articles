@@ -1,0 +1,156 @@
+<p>This continues the previous blog post on closure actions. This post expands on the initial discoveries we observed from closure actions and shows how to apply them in a few <em>cookbook</em> examples.</p>
+<p>We’ll be looking at patterns involving mixing Ember closure actions with <code>mut</code>, <code>ember-composable-helpers</code>, and <code>ember-reative-helpers</code>.</p>
+<h2><a id="DDAU_Mutating_Values_6"></a>DDAU Mutating Values</h2>
+<p>One-way bound UI requires an action for every element that needs to change.</p>
+<h3><a id="DDAU_the_long_way_10"></a>DDAU the long way</h3>
+<p>Example:</p>
+<pre><code>The lights are {{if lights 'on' 'off'}}
+&lt;br&gt;
+Light switch:
+&lt;input type=&quot;checkbox&quot;
+  onchange={{action 'toggleLightsOnOff'}}&gt;
+</code></pre>
+<pre><code>lights: false,
+
+actions: {
+  toggleLightsOnOff() {
+    this.toggleProperty('lights');
+  }
+}
+</code></pre>
+<p>This results in a lot of glue code (i.e. actions in another file).</p>
+<p><a href="https://ember-twiddle.com/266cef95964fa5674fbf6cd9c5499c2d?openFiles=templates.application.hbs%2C">Twiddle</a></p>
+<h4><a id="Kata_4_Muting_from_the_template_35"></a>Kata [4] Muting from the template</h4>
+<p>We’ll use the <code>mut</code> helper to reduce the glue. <code>mut</code> essentially returns an uninvoked setter methods for a given property.</p>
+<pre><code>The lights are {{if lights 'on' 'off'}}
+&lt;br&gt;
+Light switch:
+&lt;input type=&quot;checkbox&quot;
+  onchange={{action (mut lights) value=&quot;target.checked&quot;}}&gt;
+</code></pre>
+<p>Simple, declatative, and easier to read!</p>
+<p><a href="https://ember-twiddle.com/5ec1bf1b6fb545c6c060de45fe536c66?openFiles=templates.application.hbs%2C">Twiddle</a></p>
+<h2><a id="Chaining_helpers_and_actions_51"></a>Chaining helpers and actions</h2>
+<p>With a fundamental understanding of <code>action</code> and <code>mut</code> let’s like at one of the most powerful libraries to extend our power with closure actions: <a href="https://github.com/DockYard/ember-composable-helpers">Ember Composable Helpers</a>.</p>
+<h3><a id="Kata_5_Composable_Helpers_Maintaining_an_audit_log_55"></a>Kata [5] Composable Helpers, Maintaining an audit log</h3>
+<p><em>When things work, they’re great</em></p>
+<p>** Queue Example **</p>
+<p>We previously talked about invoking multiple actions at one time, and now we have a simple helper to do it.</p>
+<p>In our example, we want to accomplish two tasks each time an input changes:</p>
+<ol>
+  <li>
+    <p>Add details about the change to an audit log</p>
+  </li>
+  <li>
+    <p>Mutate the value of the input</p>
+  </li>
+</ol>
+<pre><code>&lt;input onchange={{queue (action 'addToAuditLog' 'fullName') (action (mut fullName))) value=&quot;target.value&quot;}} /&gt;
+&lt;p&gt;Current fullName: {{fullName}}
+There have been {{auditLog.length}} changes:
+{{#each auditLog as |audit|}}
+  &lt;li&gt;
+    {{audit}}
+  &lt;/li&gt;
+{{/each}}
+</code></pre>
+<pre><code>init() {
+  this._super(...arguments);
+  this.auditLog = [];
+},
+
+actions: {
+  addToAuditLog(field, value) {
+    this.get('auditLog').push(`${field} name has changed to ${value}`);
+  }
+}
+</code></pre>
+<p><a href="https://github.com/DockYard/ember-composable-helpers#queue"><code>Queue</code></a> allows us to easily put the peices together, passing the same original arguments to each function it calls.</p>
+<p><a href="https://ember-twiddle.com/c13d740be642b19c28da4906c4f4ae6c?openFiles=twiddle.json%2Ctemplates.components.audited-form.hbs">Twiddle</a>(At the time of writing this, the build on twiddle was failing with the latest build of <code>ember-composable-helpers</code>,
+  which is required for <code>queue</code>.</p>
+<h3><a id="Kata_6_Composable_Helpers_Transforming_Input_97"></a>Kata [6] Composable Helpers Transforming Input</h3>
+<p><em>When things don’t work as expect, reflect on the fundamentals and spinkle debuggers in scary places</em></p>
+<p>** Pipe example **</p>
+<p>In this example, we’ll transform the input value before actually mutating our model.</p>
+<p>Let’s say that we require the first letter in the last name to be capitalized. This should be super clean if works as <em>I expected it to</em>:</p>
+<pre><code>{{! DOESN'T WORK}}
+&lt;input onchange={{pipe (capitalize) (mut fullName) value=&quot;target.value&quot;}} /&gt;
+</code></pre>
+<h4><a id="How_I_debug_failures_with_helpers_and_closure_actions_112"></a>How I debug failures with helpers and closure actions</h4>
+<p><em>What to do when things go :wrong:</em></p>
+<p>This was actually one of the most frusterating initial things about closure functions for me.</p>
+<p>Let’s tear down what’s happening.</p>
+<p>The only way I know how to do this is dive into <code>node_modules</code> in a burner project, and stick a big fat <code>debugger;</code> instead <a href="https://github.com/DockYard/ember-composable-helpers/blob/master/addon/helpers/pipe.js#L14">the pipe helper</a>.</p>
+<p>What should be happening under the hood is a <code>reduction</code> over a collection of actions we are passing in. (For more of an explaination of reduction, check <a href="https://twitter.com/ryanlabouve/status/782080514815471616">this out</a>).</p>
+<p>If we check out this collection of actions: <code>[&quot;&quot;, undefined]</code>.</p>
+<p>We expected this to be a <code>capitalize</code> and a <code>mut</code> helper.</p>
+<p>In the docs, I see prefixing the whole pipe operation with an <code>action</code>, so let’s try:</p>
+<pre><code>{{! Still doesn't work}}
+&lt;input onchange={{action (pipe (capitalize) (mut fullName)) value=&quot;target.value&quot;}} /&gt;
+</code></pre>
+<p>Something is obviously executing too soon. Specifically we can see <code>(capitalize)</code> is an empty string, which is likely the result of evaluation with no argument.</p>
+<p>Let’s use our handy dandy <code>action</code> helper to delay execution by returning functions.</p>
+<p>Immediately we get an error &quot;Cannot find action <code>&quot;&quot;</code>, which is from <code>capitalize</code>… so we’ll remove the wrapped <code>action</code>.</p>
+<pre><code>{{! Still doesn't work, but progress}}
+&lt;input
+  onchange={{action
+    (pipe
+      (capitalize)
+      (action (mut fullName))
+    value=&quot;target.value&quot;}}
+  /&gt;
+</code></pre>
+<p>PROGRESS! This time we see the actions getting passed to <code>pipe</code> are <code>[undefined, function]</code>.</p>
+<p>Unfortunately, there is no way native to <code>ember-composable-helpers</code> to enable the type of curring we were going for initially (aka. closure action !== clojure actions). But, there is another addon which does: <a href="https://github.com/EmberSherpa/ember-reactive-helpers">ember-reative-helpers</a>.</p>
+<p>From the readme:</p>
+<blockquote>
+  <p>r helper makes it possible to use ember-composable-helpers in event handlers where execution of the helper is delayed until event is triggered.</p>
+</blockquote>
+<p>So let’s give this a try:</p>
+<pre><code>&lt;input onchange={{action
+  (pipe
+    (r 'capitalize')
+    (action (mut fullName))) value=&quot;target.value&quot;}}/&gt;
+</code></pre>
+<p>Works!</p>
+<h3><a id="Conclusion_Deciding_when_to_move_thigns_to_the_template_171"></a>Conclusion: Deciding when to move thigns to the template</h3>
+<p>After we understand how to reason through what’s happening with helpers and closure actions, the <em>bark</em> that closure actions has enabled allows very flexible interfaces to accomplish expressive tasks directly in the template.</p>
+<p>In some ways this is fantastic. In other ways this is terrible. New patterns are emerging that allows Ember templates to be more reacitve and DDAU.</p>
+<h4><a id="When_not_to_use_the_patterns_weve_discussed_177"></a>When not to use the patterns we’ve discussed</h4>
+<p>** 1. Do not use <code>ember-composable-helpers</code> for side-effects**</p>
+<p>We want to show if an address is valid based on an input. It’s tempting to reach for a method using <code>queue</code>.</p>
+<pre><code>{{! Bad example }}
+
+&lt;input onchange={{action (queue (action 'lookupAddress') (mut address)) value=&quot;target.value&quot;}}&gt;
+
+{{#if addressInvalid}}
+  Oh nos! Invalid address
+{{/if}}
+</code></pre>
+<pre><code>actions: {
+  lookupAddress() {
+    // some type of code
+    this.set('addressInvalid', true);
+  }
+}
+</code></pre>
+<p>But in reality, the clear dependency between <code>address</code> and <code>addressInvalid</code> indicates what we really want here is a computed property.</p>
+<pre><code>&lt;input onchange={{action (mut address) value=&quot;target.value&quot;}}&gt;
+{{#if addressInvalid}}
+  Oh nos! Invalid address
+{{/if}}
+</code></pre>
+<pre><code>addressInvalid: Ember.computed('address', {
+  get() {
+    // determine if address is invalid
+    return true;
+  }
+}).readOnly()
+</code></pre>
+<p>** 2. Don’t create a chain gang with helpers**</p>
+<p>Reusable composition is impossible from deeply nested helpers.</p>
+<p>As soon is it gets hard to read / reason about, it’s time to turn your helper chain into a boring <code>computed property</code>. This will allow you to actually reuse and compose with the value.</p>
+<h4><a id="Actual_conclusion_226"></a>Actual conclusion</h4>
+<p>As <a href="https://madhatted.com/2016/2/10/be-the-bark-ember-js-community">Ember’s bark</a> grows, it can be a bit overwhelming. Just remember, foundational programming and debugging skills will always be the key to understanding. Focus on being able
+  to deconstruct what’s happening with a pattern before you use it.</p>
+<p>Happy Tr(ai|ia)ls!</p>

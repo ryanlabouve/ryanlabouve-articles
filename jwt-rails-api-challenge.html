@@ -1,0 +1,234 @@
+<div class="post lg-px4">
+  <p>Here's the goal:</p>
+  <blockquote>
+    <p>Quick and simple Rails API that is JSON API compliant and has secure resources (via JWT) and non-secure resources.</p>
+  </blockquote>
+  <p>Our scenario: </p>
+  <blockquote>
+    <p>An read-only API to power a blog that has public posts (accessible by anyone) and private posts (only accessible to users who are logged in).</p>
+  </blockquote>
+  <h5 id="notes-">Notes:</h5>
+  <ul>
+    <li>JWT authentication will be implemented using <a href="https://github.com/nsarno/knock">knock</a></li>
+    <li>JSON API compliance will be accomplished via <a href="https://github.com/cerebris/jsonapi-resources">JSONAPI::Resources</a></li>
+    <li>I'll link out to relevant tests, with comments on what's being test, but try to keep the article quick.</li>
+  </ul>
+  <p>At any point, feel free to checkout the finished <a href="https://github.com/ryanlabouve/rails-api-jwt-toy-blog">code</a>. Let's get started <code>rails-api new rails-api-jwt-toy-blog</code>.</p>
+  <h2 id="the-models">The Models</h2>
+  <p>Posts will be a base class for PrivatePosts and PublicPosts. For the schema, we want <code>Post(title:string, body:text, type:string)</code> where the <code>type</code> colum will for <code>singe-table inheritance</code> to make the PublicPost and PrivatePost
+    inherit gracefully form Post.</p>
+  <p>(For more on single-table inheritance, check out (this post)[<a href="http://blog.arkency.com/2013/07/sti/">http://blog.arkency.com/2013/07/sti/</a>])</p>
+  <h3 id="post-model">Post Model</h3>
+  <pre><code class="hljs cpp">rails g model Post title:<span class="hljs-built_in">string</span> body:text type:<span class="hljs-built_in">string</span>
+touch app/models/private_post.rb
+touch app/models/public_post.rb
+</code></pre>
+  <p>Then I went ahead and setup <code>PublicPost</code> and <code>PrivatePost</code> as classes that inherit from <code>Post</code>. This will come in handy later when we setup our resources.</p>
+  <pre><code class="hljs ruby"><span class="hljs-comment"># app/models/public_post.rb</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">PublicPost</span> <span class="hljs-inheritance">&lt; <span class="hljs-parent">Post</span></span>;</span> <span class="hljs-keyword">end</span>
+</code></pre>
+  <p>and</p>
+  <pre><code class="hljs ruby"><span class="hljs-comment"># app/models/private_post.rb</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">PrivatePost</span> <span class="hljs-inheritance">&lt; <span class="hljs-parent">Post</span></span>;</span> <span class="hljs-keyword">end</span>
+</code></pre>
+  <p>(<a href="https://github.com/ryanlabouve/rails-api-jwt-toy-blog/commit/3af0e6beb70ce67d86d90143d5d57bdd93a85bd4">checkpoint</a>)</p>
+  <ol>
+    <li>Setup fixture (<a href="https://github.com/ryanlabouve/rails-api-jwt-toy-blog/blob/7f3fae7d334498a3063508de38b7cf9435c99942/test/fixtures/posts.yml">code</a>)</li>
+    <li>Unit test on <code>Post</code> model (<a href="https://github.com/ryanlabouve/rails-api-jwt-toy-blog/blob/4ede77c0c845ad30fdf48b54a71015eded3ce8f9/test/models/post_test.rb">code</a>)</li>
+    <li>Implement Post Model (<a href="https://github.com/ryanlabouve/rails-api-jwt-toy-blog/blob/4ede77c0c845ad30fdf48b54a71015eded3ce8f9/app/models/post.rb">code</a>)</li>
+  </ol>
+  <pre><code class="hljs ruby"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Post</span> <span class="hljs-inheritance">&lt; <span class="hljs-parent">ActiveRecord::Base</span></span></span>
+  validates <span class="hljs-symbol">:body</span>, <span class="hljs-symbol">presence:</span> <span class="hljs-keyword">true</span>
+  validates <span class="hljs-symbol">:title</span>, <span class="hljs-symbol">presence:</span> <span class="hljs-keyword">true</span>
+  validates <span class="hljs-symbol">:type</span>, <span class="hljs-symbol">presence:</span> <span class="hljs-keyword">true</span>
+
+  <span class="hljs-constant">POST_TYPES</span> = <span class="hljs-string">%w(PublicPost PrivatePost)</span>
+  validates <span class="hljs-symbol">:type</span>, <span class="hljs-symbol">:inclusion</span> =&gt; { <span class="hljs-symbol">:in</span> =&gt; <span class="hljs-constant">POST_TYPES</span> }
+<span class="hljs-keyword">end</span>
+</code></pre>
+  <p>At this point, we should have green tests and a working Post, PublicPost, and PrivatePost model. On to <code>User</code>.</p>
+  <h3 id="user-resource">User Resource</h3>
+  <p><code>User</code> is what will log in to view <code>PrivatePosts</code>.</p>
+  <p>We want the <code>User</code> model to implement Rail's <a href="http://api.rubyonrails.org/classes/ActiveModel/SecurePassword/ClassMethods.html"><code>has_secure_password</code></a>. Using <code>has_secure_password</code>, when we create a <code>User</code>,
+    we'll pass in a <code>password</code> and <code>password_confirmation</code>, rails will then encrypt and save their password as <code>password_digest</code>. We'll be able to use this as a building block to later auth our users.</p>
+  <p>If you are using Rails Api, you'll need to add <code>gem 'bcrypt'</code> to your Gemfile.</p>
+  <p>For the schema, we want <code>User(email:string, name:email, password_digest:string</code> where <code>password_digest</code> is required for <code>has_secure_password</code> to work.</p>
+  <pre><code class="hljs cpp">rails g model user password_digest:<span class="hljs-built_in">string</span> name:<span class="hljs-built_in">string</span> email:<span class="hljs-built_in">string</span>
+</code></pre>
+  <p>(<a href="https://github.com/ryanlabouve/rails-api-jwt-toy-blog/commit/7f8591ccb6a51a58f8f957780afd4f092ca2eea7">checkpoint</a>)</p>
+  <ol>
+    <li>Setup fixtures (<a href="https://github.com/ryanlabouve/rails-api-jwt-toy-blog/blob/7de80841d0c69911afda1153e6e85194a1069574/test/fixtures/users.yml">code</a>)</li>
+    <li>Setup unit test (<a href="https://github.com/ryanlabouve/rails-api-jwt-toy-blog/blob/7de80841d0c69911afda1153e6e85194a1069574/test/models/user_test.rb">code</a>)</li>
+    <li>Implement <code>User</code> model (<a href="https://github.com/ryanlabouve/rails-api-jwt-toy-blog/commit/7de80841d0c69911afda1153e6e85194a1069574">code</a>)</li>
+  </ol>
+  <pre><code class="hljs ruby"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">User</span> <span class="hljs-inheritance">&lt; <span class="hljs-parent">ActiveRecord::Base</span></span></span>
+  has_secure_password
+
+  validates <span class="hljs-symbol">:name</span>, <span class="hljs-symbol">presence:</span> <span class="hljs-keyword">true</span>
+  validates <span class="hljs-symbol">:email</span>, <span class="hljs-symbol">presence:</span> <span class="hljs-keyword">true</span>
+<span class="hljs-keyword">end</span>
+</code></pre>
+  <p>At this point we have a working user model and green tests!</p>
+  <h3 id="seeding-posts-and-users">Seeding Posts and Users</h3>
+  <p>Now we'll create some seeds to give us some posts and users to play with.</p>
+  <p>Go ahead and add <code>gem 'faker'</code> to your Gemfile and <code>bundle install</code>.</p>
+  <pre><code class="hljs php"><span class="hljs-comment"># db/seeds.rb</span>
+Post.destroy_all
+User.destroy_all
+
+User.create!({
+  name: <span class="hljs-string">'Lester Tester'</span>,
+  email: <span class="hljs-string">'test@user.com'</span>,
+  password: <span class="hljs-string">'test1234'</span>,
+  password_confirmation: <span class="hljs-string">'test1234'</span>
+})
+
+<span class="hljs-number">100.</span>times <span class="hljs-keyword">do</span>
+  PublicPost.create!(
+    title: Faker::Lorem.sentence,
+    body: Faker::Lorem.paragraphs.join(<span class="hljs-string">' '</span>)
+  )
+
+  PrivatePost.create!(
+    title: Faker::Lorem.sentence,
+    body: Faker::Lorem.paragraphs.join(<span class="hljs-string">' '</span>)
+  )
+end
+</code></pre>
+  <p>After this can run <code>bundle exec rake db:seed</code> and verify this worked in <code>rails console</code>.</p>
+  <pre><code class="hljs cpp">rails c
+&gt; PublicPost.length <span class="hljs-preprocessor"># =&gt; <span class="hljs-number">100</span></span>
+&gt; PublicPost.first <span class="hljs-preprocessor"># =&gt; &lt;PublicPost Object&gt;</span>
+</code></pre>
+  <h2 id="controllers-and-resources-and-routing-oh-my-">Controllers and Resources and Routing Oh My!</h2>
+  <p>Now that we have our models and some dummy data, we'll want to expose it to the world by setting up our controllers, resources, and routing.</p>
+  <p>Let's introduce <a href="https://github.com/cerebris/jsonapi-resources">JSONAPI::Resources</a> to the project by adding <code>gem 'jsonapi-resources'</code> to the Gemfile.</p>
+  <h3 id="public-posts">Public Posts</h3>
+  <ol>
+    <li>Generate your controller and write tests for <code>PublicPosts</code></li>
+  </ol>
+  <p><code>rails g controller PublicPosts</code>.</p>
+  <p>And then set it up as a JSONAPI::Resources controller:</p>
+  <pre><code class="hljs ruby"><span class="hljs-comment"># app/controllers/public_posts_controller.rb</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">PublicPostsController</span> <span class="hljs-inheritance">&lt; <span class="hljs-parent">ApplicationController</span></span></span>
+  <span class="hljs-keyword">include</span> <span class="hljs-constant">JSONAPI::ActsAsResourceController</span>
+<span class="hljs-keyword">end</span>
+</code></pre>
+  <p>Next, let's write the tests for the <code>PublicPosts</code>.</p>
+  <p>We want to <code>GET /public-posts</code> and get a list of the public posts, and <code>GET /public-posts/:id</code> to show a single post. Then, we should not be able to create, edit or delete. (Here are the tests: <a href="https://github.com/ryanlabouve/rails-api-jwt-toy-blog/blob/6294ceaaac4b78b3b7805a1d2fcc207e99318f50/test/controllers/public_posts_controller_test.rb">code</a>)</p>
+  <ol>
+    <li>Generate <code>PublicPosts</code> resource and add to your routes.rb.</li>
+  </ol>
+  <p><code>rails generate jsonapi:resource public_posts</code></p>
+  <pre><code class="hljs ruby"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">PublicPostResource</span> <span class="hljs-inheritance">&lt; <span class="hljs-parent">JSONAPI::Resource</span></span></span>
+  immutable
+  attributes <span class="hljs-symbol">:title</span>, <span class="hljs-symbol">:body</span>
+<span class="hljs-keyword">end</span>
+</code></pre>
+  <p>and then in routes</p>
+  <pre><code class="hljs nginx"><span class="hljs-comment"># config/routes.rb</span>
+<span class="hljs-title">jsonapi_resources</span> :public_posts
+</code></pre>
+  <p>Yay, passing tests! Now let's move onto our private posts.</p>
+  <h3 id="private-posts">Private Posts</h3>
+  <p>We are using <a href="https://github.com/nsarno/knock">Knock</a> to do JWT auth. Let's go ahead and set that up.</p>
+  <p>Add <code>gem 'knock'</code> to your Gemfile and <code>bundle install</code>.</p>
+  <p>Run <code>rails generate knock:install</code>. This will add <code>config/initializers/knock.rb</code>, which you may want to peruse the comments for additional configuration options.</p>
+  <p>Mount the engine in your <code>routes.rb</code> to expose our authentication endpoints.</p>
+  <pre><code class="hljs php"><span class="hljs-comment"># config/routes.rb</span>
+...
+mount Knock::Engine =&gt; <span class="hljs-string">"/knock"</span>
+...
+</code></pre>
+  <p>Add the <code>Knock::Authenticable</code> module in ApplicationController to expose Knock authentication methods to our controllers.</p>
+  <pre><code class="hljs ruby"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ApplicationController</span> <span class="hljs-inheritance">&lt; <span class="hljs-parent">ActionController::API</span></span></span>
+  <span class="hljs-keyword">include</span> <span class="hljs-constant">Knock::Authenticable</span>
+<span class="hljs-keyword">end</span>
+</code></pre>
+  <p>Then later we will be able to add <code>before_action :authenticate</code> to our <code>PrivatePosts</code> controller to preform the actual authentication.</p>
+  <p>(<a href="https://github.com/ryanlabouve/rails-api-jwt-toy-blog/commit/2fd20fce149887ce7cc4a7f3de0551eab210c528">code checkpoint</a>)</p>
+  <p>(There's a bit of duplication here from the previous section to setup private posts due to their similarity to public posts.)</p>
+  <ol>
+    <li>Generate your controller and write tests for <code>Private Posts</code></li>
+  </ol>
+  <p><code>rails g controller PrivatePosts</code>.</p>
+  <p>And then set it up as a JSONAPI::Resources controller:</p>
+  <pre><code class="hljs ruby"><span class="hljs-comment"># app/controllers/private_posts_controller.rb</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">PrivatePostsController</span> <span class="hljs-inheritance">&lt; <span class="hljs-parent">ApplicationController</span></span></span>
+  <span class="hljs-keyword">include</span> <span class="hljs-constant">JSONAPI::ActsAsResourceController</span>
+<span class="hljs-keyword">end</span>
+</code></pre>
+  <p>Next, let's write the tests for the <code>PrivatePosts</code>.</p>
+  <p>We want to <code>GET /public-posts</code> for authorized users and a <code>401</code> for unathroized users. Same things for the show routes of <code>GET /public-posts/:id</code>. Then, we should not be able to create, edit or delete. (Here are the
+    <a href="https://github.com/ryanlabouve/rails-api-jwt-toy-blog/blob/147df98/test/controllers/private_posts_controller_test.rb">tests</a>)</p>
+  <ol>
+    <li>Generate <code>PrivatePosts</code> resource and add to your routes.rb.</li>
+  </ol>
+  <p><code>rails generate jsonapi:resource private_posts</code></p>
+  <pre><code class="hljs ruby"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">PrivatePostResource</span> <span class="hljs-inheritance">&lt; <span class="hljs-parent">JSONAPI::Resource</span></span></span>
+  immutable
+  attributes <span class="hljs-symbol">:title</span>, <span class="hljs-symbol">:body</span>
+<span class="hljs-keyword">end</span>
+</code></pre>
+  <p>and then in routes</p>
+  <pre><code class="hljs ruby"><span class="hljs-comment"># config/routes.rb</span>
+...
+jsonapi_resources <span class="hljs-symbol">:private_posts</span>
+...
+</code></pre>
+  <p>Now it's time to circle back around to adding authentication to our <code>PrivatePosts</code>.</p>
+  <pre><code class="hljs ruby"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">PrivatePostsController</span> <span class="hljs-inheritance">&lt; <span class="hljs-parent">ApplicationController</span></span></span>
+  <span class="hljs-keyword">include</span> <span class="hljs-constant">JSONAPI::ActsAsResourceController</span>
+  before_filter <span class="hljs-symbol">:authenticate</span> <span class="hljs-comment"># added line</span>
+<span class="hljs-keyword">end</span>
+</code></pre>
+  <p>At this point, our tests are green and our challenge is complete!</p>
+  <p>Feel free to go <a href="https://github.com/ryanlabouve/rails-api-jwt-toy-blog">check out the project</a></p>
+  <h2 id="curling-for-sanity">Curling for Sanity</h2>
+  <p>I've included the <a href="https://luckymarmot.com/paw">Paw</a> file in the project: <a href="https://github.com/ryanlabouve/rails-api-jwt-toy-blog/blob/master/MainRequests.paw">here</a>.</p>
+  <p>For the sake of being generic, below I'll walk through how this works via CURL. And, we'll assume you are running this project on port 3000. If you are not, you'll need to make slight adjustments below.</p>
+  <p>Don't forget, for this to be very satisfying, you'll need to seed the database by running <code>bundle exec rake db:seed</code>.</p>
+  <h3 id="get-public-posts">GET /public-posts</h3>
+  <p>Highlights: </p>
+  <ul>
+    <li>Requst type of GET</li>
+    <li>Header that needs to set <code>Content-Type: application/json</code> (which this will be the same for all calls for JSONAPI compliance)</li>
+  </ul>
+  <pre><code class="hljs nginx"><span class="hljs-title">curl</span> -X <span class="hljs-string">"GET"</span> <span class="hljs-string">"http://localhost:3000/public-posts/"</span> \
+    -H <span class="hljs-string">"Content-Type: application/json"</span>
+</code></pre>
+  <h3 id="get-private-posts">GET /private-posts</h3>
+  <p>If you try the same request on private posts, you'll get a <code>401</code>. This is actually a two part process.</p>
+  <h4 id="step-1-auth">Step 1: Auth</h4>
+  <p>Highlights:</p>
+  <ul>
+    <li>POST</li>
+    <li>Pass in the email and password of the user setup in <a href="https://github.com/ryanlabouve/rails-api-jwt-toy-blog/blob/master/db/seeds.rb">seeds</a>. </li>
+    <li>Knock expects the request to be wrapped in a json object called auth. <a href="https://github.com/nsarno/knock#authenticating-from-a-web-or-mobile-application">Check the docs</a> for more, and don't forget to check out the config file knock generaged
+      for more customization options.</li>
+  </ul>
+  <pre><code class="hljs perl">curl -X <span class="hljs-string">"POST"</span> <span class="hljs-string">"http://localhost:3000/knock/auth_token"</span> \
+    -H <span class="hljs-string">"Content-Type: application/json"</span> \
+    -d <span class="hljs-variable">$'</span>{<span class="hljs-string">"auth"</span>: {<span class="hljs-string">"email"</span>: <span class="hljs-string">"test<span class="hljs-variable">@user</span>.com"</span>, <span class="hljs-string">"password"</span>: <span class="hljs-string">"test1234"</span>}}
+</code></pre>
+  <p>Output will be something like:</p>
+  <pre><code class="hljs http"><span class="hljs-status">HTTP/1.1 <span class="hljs-number">201</span> Created </span>
+
+<span class="json">{"<span class="hljs-attribute">jwt</span>":<span class="hljs-value"><span class="hljs-string">"eyJ0eXAiOiJKV1QiLCJhb..."</span></span>}
+</span></code></pre>
+  <p>The JWT token generated here is needed for the next request.</p>
+  <h4 id="step-2-request-private-resource-with-token">Step 2: Request private resource with token</h4>
+  <p>Highlights:</p>
+  <ul>
+    <li>The header <code>Authorization: Bearer [token]</code> is what auths our request, using the toekn from the previous step</li>
+    <li>Otherwise, it's the same request as the one for public-posts.</li>
+  </ul>
+  <pre><code class="hljs nginx"><span class="hljs-title">curl</span> -X <span class="hljs-string">"GET"</span> <span class="hljs-string">"http://localhost:3000/private-posts"</span> \
+    -H <span class="hljs-string">"Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJI....."</span> \
+    -H <span class="hljs-string">"Content-Type: application/json"</span>
+</code></pre>
+  <h2 id="edit-4-14-dang-you-cors-">Edit 4/14 Dang you cors!</h2>
+  <p>When hookig this API up to the ember app that goes along with the next tutorial, I realized that I didn't setup cors.</p>
+  <p>Check out <a href="https://github.com/ryanlabouve/rails-api-jwt-toy-blog/commit/976a26fbacaf63d68752eae62307fd499805c89c">This
+commit</a> for more information on how to do this.</p>
+</div>

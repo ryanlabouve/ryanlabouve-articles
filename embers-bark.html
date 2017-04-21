@@ -1,0 +1,214 @@
+<p>There are addons that I use in every Ember application, packages that change the way I structure and write every project.</p>
+
+<p>Ember has been around for 5 years. The mantra "stability without stagnation" is, in part, accomplished by the core pieces of Ember being stable. What actually beats the stagnation is the community; a big part of this is addons (<a href="https://madhatted.com/2016/2/10/be-the-bark-ember-js-community">"Related, Be the Bark"</a>).</p>
+
+<p>So the community can rapidly solve new and emerging problems while the core is stable.</p>
+
+<h2 id="proofofcommunitysolvingbigproblemsembercli">Proof of community solving big problems: Ember CLI</h2>
+
+<ul>
+<li><a href="https://ember-cli.com/">Ember CLI</a> — Ember's command line interface</li>
+</ul>
+
+<p>Ember CLI hooked me on Ember. I was spending days configuring grunt or gulp for a new project. And days again when I came back to old projects.</p>
+
+<p>With Ember this was not the case.</p>
+
+<p>I took build tooling in other languages for granted (e.g. Ruby -> Rails). Javascript and Javascript frameworks were in my mind a second class citizen to "real" programming languages and "serious" frameworks.</p>
+
+<p>Ember CLI wrapped a ton of useful parts for making web applications (Ember, Babel so I could write ES6, modules, etc) and shipped them to the browser with little fuss.</p>
+
+<p>What follows is the chapter after Ember CLI, a list of Ember's most fundamental <a href="https://madhatted.com/2016/2/10/be-the-bark-ember-js-community">bark</a> with a little explaination of why each one is important.</p>
+
+<h2 id="tourofimothemostfundamentalemberaddons">Tour of (IMO) the Most Fundamental Ember Addons</h2>
+
+<hr />
+
+<h3 id="systematicleveladdons">Systematic Level Addons</h3>
+
+<ul>
+<li><a href="http://ember-concurrency.com/">ember-concurrency</a> — "Improved concurrency primitives for Ember.js"</li>
+</ul>
+
+<pre><code>// Example: Autosave changes after 5 seconds without additional edits
+saveChangesTask: task(function * () {
+  yield timeout(5000);
+  this.get('model').save();
+}).restartable();
+</code></pre>
+
+<ul>
+<li><a href="https://github.com/emberjs/data">ember-data</a> — "A data persistence library for Ember.js"</li>
+</ul>
+
+<pre><code>this.store.findAll('entry');
+this.store.findRecord('entry', 123);
+</code></pre>
+
+<ul>
+<li><p>Protocol agnostic (i.e. doesn't matter if it's a JSON API or websockets</p></li>
+
+<li><p>Store for managing lifecycle of models</p></li>
+
+<li><p>Highly extensible via adapters</p></li>
+
+<li><p><a href="https://github.com/ember-engines/ember-engines">ember-engines</a> — "Engines allow multiple logical applications to be composed together into a single application"</p></li>
+
+<li><p><a href="https://ember-fastboot.com/">ember-fastboot</a> — "Using FastBoot, you can serve rendered HTML to browsers and other clients without requiring them to download JavaScript assets."  </p></li>
+</ul>
+
+<blockquote>
+  <p>When a user visits your site, the initial HTML is rendered and served to the user. The very first thing they see is your content.</p>
+
+  <p>Only after the content has loaded do they start downloading JavaScript. Once finished, your app takes over. You get the same snappy performance you’re used to from Ember apps."</p>
+</blockquote>
+
+<hr />
+
+<h3 id="addonsfortesting">Addons for Testing</h3>
+
+<ul>
+<li><a href="http://www.ember-cli-mirage.com/">ember-mirage</a> — "Build, test and demo your app
+using a client-side server." </li>
+</ul>
+
+<p>This means you can develop features while the backend is being built.</p>
+
+<pre><code>server.createList('post', 10);
+visit('/posts');
+// See the generated data
+</code></pre>
+
+<ul>
+<li><a href="https://github.com/san650/ember-cli-page-object">ember-cli-page-objects</a> — "Eases the construction of page objects on your acceptance and integration tests." </li>
+</ul>
+
+<p>TL;DR page objects allow details about DOM to be abstracted away from tests, making tests easier to write and easier to read.</p>
+
+<pre><code>const loginPage = PageObject.create({
+  visit: visitable('/'),
+  username: fillable('#username'),
+  password: fillable('#password'),
+  submit: clickable('button'),
+});
+
+test('Login is successful w/valid credentials', function(assert) {
+  loginPage
+    .visit()
+    .username('admin')
+    .password('invalid')
+    .submit();
+  andThen(() =&gt; {
+    // Assertions
+  });
+});
+</code></pre>
+
+<ul>
+<li><a href="https://github.com/simplabs/ember-test-selectors">ember-test-selectors</a> — Use <code>data</code> attributes as tests selectors in Development that automatically get stripped in production.</li>
+</ul>
+
+<pre><code>{{! In some template }}
+&lt;input type="text" data-test-username /&gt;
+</code></pre>
+
+<pre><code>// In some test
+assert.equal(testSelector('username'), 'bob', 'Bob is the user!');
+</code></pre>
+
+<p>I use this in combination with page-objects.</p>
+
+<hr />
+
+<h3 id="addonsforhelpers">Addons for Helpers</h3>
+
+<ul>
+<li><a href="https://github.com/DockYard/ember-composable-helpers">ember-composable-helpers</a> — Composable helpers to enable more declatative templating. I wrote a little bit about this <a href="http://ryanlabouve.com/ember-closure-action-explorations-pt-2">here</a>.</li>
+</ul>
+
+<pre><code>&lt;button {{action (pipe addItemToCard Checkout) book}}&gt;
+  Buy Now!
+&lt;/button&gt;
+</code></pre>
+
+<ul>
+<li><a href="https://github.com/jmurphyau/ember-truth-helpers">ember-truth-helpers</a> — "HTMLBars template helpers for additional truth logic in <code>if</code> and <code>unless</code> statements."</li>
+</ul>
+
+<pre><code>{{#if (and isAdmin isAwesome)}}
+  You are an awesome admin!
+{{/if}}
+</code></pre>
+
+<ul>
+<li><a href="https://github.com/shipshapecode/ember-math-helpers">ember-math-helpers</a> — "Ember HTMLBars helpers for basic arithmetic"</li>
+</ul>
+
+<pre><code>{{val1}} + {{val2}} = {{add val1 val2}}
+</code></pre>
+
+<hr />
+
+<h3 id="miscaddons">Misc Addons</h3>
+
+<ul>
+<li><a href="https://github.com/kellyselden/ember-awesome-macros">ember-awesome-macros</a> — "A random collection of Ember computed macros" that enable awesome composability.</li>
+</ul>
+
+<pre><code>cartTotal: array.reduce('cartItems', (result, cur) =&gt; {
+  return result + curr.get('price')
+}),
+tax: product('cartTotal' 'taxRate'),
+tip: product('cartTotal', 'rateOfGratuity'),
+total: sum('cartTotal', 'tax', 'tip')
+</code></pre>
+
+<ul>
+<li><a href="https://github.com/DockYard/ember-changeset">ember-changesets</a> with <a href="https://github.com/DockYard/ember-changeset-validations">ember changeset-validations</a> — "Ember.js flavored changesets, inspired by Ecto" and an accompanying set of compatible validations</li>
+</ul>
+
+<pre><code>{{! dummy-form/template.hbs}}
+&lt;form&gt;
+  {{input value=changeset.firstName}}
+  {{input value=changeset.lastName}}
+
+  &lt;button {{action submit changeset}}&gt;Submit&lt;/button&gt;
+  &lt;button {{action rollback changeset}}&gt;Cancel&lt;/button&gt;
+&lt;/form&gt;
+</code></pre>
+
+<hr />
+
+<h2 id="addonsfortooling">Addons for Tooling</h2>
+
+<ul>
+<li><a href="https://github.com/ember-cli-deploy/ember-cli-deploy">ember-cli-deploy</a> — A completely extensable and customizable deployment pipeline</li>
+</ul>
+
+<pre><code>//Setup your whole app to deply with this one-liner!
+ ember deploy production
+</code></pre>
+
+<ul>
+<li><a href="https://github.com/trentmwillis/ember-exam">ember-exam</a> — Some useful extensions on Quint: randomization, splitting, and parallelization.</li>
+</ul>
+
+<pre><code>ember exam --split=2 --random
+</code></pre>
+
+<ul>
+<li><a href="https://github.com/abuiles/ember-watson">ember-watson</a> — As conventions change in Ember this tool can scan and update your codebase.</li>
+</ul>
+
+<pre><code>// Example. Check docs for availbile migrations
+ember watson:upgrade-qunit-tests
+</code></pre>
+
+<ul>
+<li><a href="https://github.com/ef4/ember-browserify">ember-browserify</a> — This is an ember-cli addon for easily loading CommonJS modules from npm via browserify</li>
+</ul>
+
+<pre><code>import MyCoolModule from "npm:my-cool-module";
+</code></pre>
+
+<p>There are a ton of other addons I love and use when I need them, but these always end up in my projects and have the biggest impact.</p>

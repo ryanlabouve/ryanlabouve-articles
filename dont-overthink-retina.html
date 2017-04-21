@@ -1,0 +1,144 @@
+<div class="post lg-px4">
+  <p>With a few simple changes to how we handle our web graphics we can prepare for the retina web.</p>
+  <img src="http://com-ryanlabouve-blog.s3.amazonaws.com/pixel-to-retina.jpg" alt="Pixel to Retina Art Image">
+  <p>Retina screen usage surges. New devices have progressively high density displays.</p>
+  <p>There’s an ever growing body of javascript helper libraries <a href="http://www.smashingmagazine.com/2014/05/12/picturefill-2-0-responsive-images-and-the-perfect-polyfill/" title="picturefill-2-0: Responsive Images and the perfect polyfill">link</a>,
+    techniques <a href="http://www.smashingmagazine.com/2013/06/02/clown-car-technique-solving-for-adaptive-images-in-responsive-web-design/" title="Clown Car Technique">link</a> <a href="http://ericportis.com/posts/2014/srcset-sizes/" title="Srcset Sizes">link</a>,
+    and opinions <a href="http://davidwalsh.name/responsive-images" title="Responsive Images">link</a> <a href="http://www.slideshare.net/teleject/convergese-adaptiveimagesconverge-se" title="Convergese Adaptive Images">link</a> <a href="http://alistapart.com/article/responsive-images-how-they-almost-worked-and-what-we-need"
+      title="Responsive Images: How they almost worked and what we need">link</a> <a href="http://css-tricks.com/which-responsive-images-solution-should-you-use/" title="Which Responsive Image Solution You Should Use">link</a> about how to what this means
+    for our website and how to adapt our graphical assets.</p>
+  <p>This situation reminds me of a similar one concerning CSS and grids, to which Chris Coyier responded <a href="http://css-tricks.com/dont-overthink-it-grids/" title="Don't Overthink it Grids">Don’t Overthink It Grids</a>.</p>
+  <p>We want <em>the highest quality images</em> with <em>the lightest possible effect on page weight</em> and <em>the easiest possible implementation</em>. My basic strategy:</p>
+  <ol>
+    <li>Think retina first</li>
+    <li>Pick the right tool for the job</li>
+    <li>Test &amp; Adjust Accordingly</li>
+  </ol>
+  <p>There are some exceptions to what I’m about to say, but this will honestly get you past 90% of the way to being retina-ready.</p>
+  <h2 id="think-retina-first">Think Retina First</h2>
+  <blockquote>
+    <p>Always target high-density displays by default, don’t make it an afterthought —Thomas Fuchs</p>
+  </blockquote>
+  <h3 id="use-css-first-">Use CSS First!</h3>
+  <p>Grizzled web veterans will recall spacer GIFS, rounding corners with images, and other archaic pixel-laden techniques used to drive web 2.0. Thankfully, many of these we can now accomplish with CSS.</p>
+  <p>CSS is fast to load, well-supported, scaleable, (often) dynamic, and 99.9% retina ready.</p>
+  <img src="http://com-ryanlabouve-blog.s3.amazonaws.com/Css-Examples.jpg" alt="Css-Examples">
+  <h4 id="some-useful-css-techniques">Some Useful CSS Techniques</h4>
+  <ul>
+    <li><a href="http://viget.com/inspire/39-ridiculous-things-to-do-with-css3-box-shadows">39 Ridiculous Things To Do With CSS3 Box Shadows</a></li>
+    <li><a href="http://lea.verou.me/humble-border-radius/#intro">The Humble Border Radius</a></li>
+    <li><a href="http://nicolasgallagher.com/css-drop-shadows-without-images/demo/">CSS Drop Shadows Without Images</a></li>
+    <li><a href="http://bohemiancoding.com/sketch/support/documentation/11-exporting/5-css.html">Export CSS from Sketch</a></li>
+    <li><a href="http://blogs.adobe.com/jnack/2012/12/demo-new-css-export-from-photoshop-cs6.html">Export CSS from Photoshop (if you are a photoshopper)</a></li>
+    <li><a href="http://lea.verou.me/css3-gradients/#intro">CSS3 Gradients, from #fff to #000…</a></li>
+  </ul>
+  <h3 id="use-vector-second">Use Vector Second</h3>
+  <p>Vector based formats (like SVG, Fonts, and Icon Fonts) are resilient. They are composed of resolution independent mathematical formulas; so no matter how big they are blown up they will stay crisp.</p>
+  <p>Vectors are fairly fast to load (although potentially costing your some HTTP requests), scaleable, (potentially) dynamic, and 99.9% retina ready.</p>
+  <img style="max-width: 500px;" src="http://com-ryanlabouve-blog.s3.amazonaws.com/pngvssvg.png" alt="pngvssvg">
+  <br><a href="http://upload.wikimedia.org/wikipedia/commons/9/92/Three_logos.svg">http://upload.wikimedia.org/wikipedia/commons/9/92/Three_logos.svg</a>
+  <h4 id="useful-resources-for-vectors-on-the-web">Useful Resources for Vectors on the Web</h4>
+  <ul>
+    <li><a href="http://css-tricks.com/using-svg/">Using SVG</a></li>
+    <li><a href="http://danielmall.com/articles/svg-workflow-for-designers/">SVG Workflow for Designers</a></li>
+    <li><a href="http://tympanus.net/codrops/2013/11/27/svg-icons-ftw/">SVG Icons FTW</a></li>
+    <li><a href="http://www.smashingmagazine.com/2012/01/16/resolution-independence-with-svg/">Resolution Independence with SVG</a></li>
+    <li><a href="http://www.filamentgroup.com/lab/grunticon.html">Grunticons: Easiest way to make/manage svg icons</a></li>
+    <li><a href="http://fortawesome.github.io/Font-Awesome/">Font Awesome: A quick, free, and awesome icon font</a></li>
+    <li><a href="http://css-tricks.com/html-for-icon-font-usage/">HTML for Icon Font Usage</a></li>
+  </ul>
+  <h3 id="raster-last-choice-">Raster, Last Choice.</h3>
+  <p>Raster images will always be limited by their original pixel canvas. At some point, they will unavoidably be blurry. But if you want that beautiful landscape, you will not want to build it out of CSS Box Shadows. (Although <a href="http://codepen.io/tag/box-shadow/">someone probably could</a>).</p>
+  <p>Raster images are dangerous. There are horror stories. Page weights can multiply by orders of magnitude. Images can start to look like garbage on nice screens.</p>
+  <h4 id="the-easy-trick-to-using-jpg-png-and-gif">The <strong>easy</strong>trick to using JPG, PNG, and GIF</h4>
+  <p>Instead of starting with some complicated technique to serve multiple images consider doing this:</p>
+  <ol>
+    <li>Make your image 2 to 3 times larger than it needs to be.</li>
+    <li>Export it at <em>very low</em> quality.</li>
+    <li>Scale down in CSS</li>
+  </ol>
+  <p>This is easy to implement. The pictures will look good on retina screens. Non retina screens just scale it down and look fine. And <strong>it doesn’t increase the file size a ton</strong>.</p>
+  <p>We’re talking, maybe a 20% increase.</p>
+  <h5 id="here-are-some-additional-resources-about-this-technique-">Here are some additional resources about this technique:</h5>
+  <ul>
+    <li><a href="http://www.netvlies.nl/blog/design-interactie/retina-revolution">Retina Revolution</a></li>
+    <li><a href="http://www.netvlies.nl/blog/design-interactie/retina-revolutie-follow-up">Retina Revolutie Follow Up</a></li>
+    <li><a href="http://alidark.com/responsive-retina-image-mobile/">Do retina images really mean larger files?</a></li>
+    <li><a href="http://www.filamentgroup.com/lab/compressive-images.html">Compressive Images</a></li>
+  </ul>
+  <h2 id="picking-the-right-tool">Picking the right tool</h2>
+  <p>Actual success depends mainly on using the right tool for the job. Sometimes you need to use a JPEG. You shouldn’t attempt to recreate a stunning landscape using CSS box shadows! Here’s a run-down:</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Problem</th>
+        <th>Solution</th>
+        <th>Retina-Ready</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Text</td>
+        <td>Use Text</td>
+        <td>You’re good.</td>
+      </tr>
+      <tr>
+        <td>Complex Pictures</td>
+        <td>Usually JPEG</td>
+        <td>Create a 2x version with lower quality.
+          <br>Use this version only.
+          <br><a href="http://stackoverflow.com/questions/2336522/png-vs-gif-vs-jpeg-when-best-to-use">More details.</a></td>
+      </tr>
+      <tr>
+        <td>Pictures
+          <br>with few colors
+          <br>or needing transparency</td>
+        <td>Usually PNG</td>
+        <td>Create a 2x version with lower quality.
+          <br>Use this version only.
+          <br><a href="http://stackoverflow.com/questions/2336522/png-vs-gif-vs-jpeg-when-best-to-use">More details.</a></td>
+      </tr>
+      <tr>
+        <td>Animated GIF</td>
+        <td>Animated GIF</td>
+        <td>Create a 2x version with lower quality.
+          <br>Use this version only.</td>
+      </tr>
+      <tr>
+        <td>Icons, Logos, UI</td>
+        <td>Usually SVG</td>
+        <td>Retina Ready.</td>
+      </tr>
+      <tr>
+        <td>UI, Fast</td>
+        <td>Icon Fonts</td>
+        <td>Retina Ready.
+          <br>Not as flexible as SVG,
+          <br>but can’t beat the up-and-running
+          <br>time of something like <a href="http://fortawesome.github.io/Font-Awesome/">Font Awesome</a></td>
+      </tr>
+    </tbody>
+  </table>
+  <p>Based off a table in Thomas Fuch’s <a href="http://retinafy.me/">Retinafy</a>. Buy it now. Worth every penny. Full of other gems like <a href="http://mir.aculo.us/2012/06/26/flowchart-how-to-retinafy-your-website/">How to Retinafy Your Website</a></p>
+  <h3 id="optimize-whatever-you-can">Optimize Whatever You Can</h3>
+  <p>Part of using the right tool is using it right. Optimize everything. It’s easy money.</p>
+  <p>Run <a href="https://imageoptim.com/">ImageOptim</a> on JPGEs, GIFs, PNGs, and more.</p>
+  <p>On SVGs, run <a href="https://github.com/svg/svgo">SVGO</a></p>
+  <p>On PNGs you can optimize to 11 with <a href="http://pngmini.com/">ImageAlpha</a>.</p>
+  <h2 id="test-and-adjust-accordingly">Test and Adjust Accordingly</h2>
+  <p>There are exceptions to every rule. Make sure to test your images everywhere and see how they look (PSA: Test with y-slow too). Some of the biggest things you could run into:</p>
+  <h3 id="art-direction">Art Direction</h3>
+  <p>If making an image smaller reduces the message it communicates, you might have to swap with a cropped or art-directed image; using something like the
+    <picture> tag to easily switch images based on screen size. <a href="http://blog.cloudfour.com/8-guidelines-and-1-rule-for-responsive-images/">(see number 6)</a></picture>
+  </p>
+  <h3 id="older-browsers">Older Browsers</h3>
+  <p>Like, SVGs don’t work out of the box on old browser. Define your browser support and prepare fallbacks where appropriate.</p>
+  <h3 id="unacceptable-loss-of-quality">Unacceptable Loss of Quality</h3>
+  <p>In most cases using the low quality JPEG trick works great. Sometimes it doesn’t though.</p>
+  <p>Maybe there are some times when a picture just needs to be weighty, or have different versions based on resolution.</p>
+  <h3 id="slow-networks">Slow Networks</h3>
+  <p>It is possible to throw network speed into the mix and serve up low/mid/high res graphic based on what kind of network connection you have. Doing this you will have to rely on <a href="http://www.smashingmagazine.com/2013/07/08/choosing-a-responsive-image-solution/">an alternate solution</a>.</p>
+  <p>Now go forth and retinafy!<p>
+    <br><img src="http://com-ryanlabouve-blog.s3.amazonaws.com/LOTR-GIFS-lord-of-the-rings-19103835-480-193.gif" alt="LOTR-GIFS-lord-of-the-rings-19103835-480-193">
+  <p></p>
+</div>

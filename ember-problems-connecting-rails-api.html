@@ -1,0 +1,130 @@
+<div class="post lg-px4">
+  <blockquote>
+    <p>Problem 1: you want to connect Ember-CLI to an actual API</p>
+  </blockquote>
+  <p>Welcome to part 1 of my 10 part series <strong>Ember Problems</strong>. I wrote down 10 <em>real problems</em> I had when learning ember, and we’ll solve them one by one. We’ll be using exploring them from both Ember-CLI and Rails throughout this series.
+    Today we are going to solve <em>Connecting Ember to a Rails API.</em></p>
+  <p>
+    <style>
+      .embed-container {
+        position: relative;
+        padding-bottom: 56.25%;
+        height: 0;
+        overflow: hidden;
+        max-width: 100%;
+      }
+
+      .embed-container iframe,
+      .embed-container object,
+      .embed-container embed {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </p>
+  <div class="embed-container">
+    <iframe src="https://www.youtube.com/embed/r4H9rnhUyv4" frameborder="0" allowfullscreen=""></iframe>
+  </div>
+  <p></p>
+  <p>Here’s all the code for today’s lesson: <a href="https://github.com/ryanlabouve/todomvc-api/tree/ep1">github.com/ryanlabouve/todomvc-api</a></p>
+  <h2 id="started-with-todomvc-with-ember-cli">Started with TodoMVC with Ember-CLI</h2>
+  <p>On a <a href="http://ryanlabouve.com/todomvc-ember-cli/">previous tutorial</a> we build TodoMVC with Ember-CLI. We left off by switching from the fixture adapter (<code>DS.FixtureAdapter</code>) to the local storage adapter (<code>DS.LSAdapter</code>).</p>
+  <p>For our tutorial today we are building the most basic Rails API for TodoMVC. Then we are switching our Ember app to use our API via the Active Model Adapter (<code>DS.ActiveModelAdapter</code>).</p>
+  <h2 id="building-the-api">Building the API</h2>
+  <p>We’re going to use the <a href="https://github.com/rails-api/rails-api">rails-api gem</a> for the API, because of the gem’s scaffolding generator and Ember compatibility via the <a href="https://github.com/rails-api/active_model_serializers">rails-api/active_model_serializers</a>.</p>
+  <p>First, make sure you have the rails-api gem installed.</p>
+  <pre><code class="hljs nginx"><span class="hljs-title">gem</span> install rails-api
+</code></pre>
+  <p>Then create a new rails-api project called <a href="https://github.com/ryanlabouve/todomvc-api">todomvc-api</a>.</p>
+  <pre><code class="hljs bash">rails-api new todomvc-api
+<span class="hljs-built_in">cd</span> todomvc-api
+</code></pre>
+  <h3 id="our-specification">Our Specification</h3>
+  <p>Based on the fixtures from TodoMVC, our models have two basic properties that we’ll need.</p>
+  <ol>
+    <li><em>[title]</em>, String: the title of the todo</li>
+    <li><em>[isCompleted]</em>, String: wheter the todo has been done yet</li>
+  </ol>
+  <p><strong>WARNING: Ember is camel-cased (e.g. isCompleted) and Rails is underscored (e.g. is_completed). So inside of Rails, use underscores. We’ll see later how the adapter helps both sides resolve this difference.</strong></p>
+  <p>So now we’ll actually create the todo resource using the rails-api scaffold.</p>
+  <pre><code class="hljs bash">rails g scaffold todo title:string is_completed:boolean
+bundle <span class="hljs-built_in">exec</span> rake db:migrate
+</code></pre>
+  <p>Now if we boot up our rails server, and look at our new <code>todo</code> route,</p>
+  <pre><code class="hljs nginx"><span class="hljs-title">rails</span> s
+open <span class="hljs-url">http://localhost:3000/todos</span>
+</code></pre>
+  <p>we’ll see an empty json array.</p>
+  <img src="http://com-ryanlabouve-blog.s3.amazonaws.com/ep1-after-scaffold.png" alt="Ember Problems 1: Data After Scaffold">
+  <h3 id="adding-fake-data">Adding Fake Data</h3>
+  <p>Before we move on, let’s quickly generate some fake data to populate our api using the <a href="https://github.com/stympy/faker">faker gem</a>.</p>
+  <h4 id="adding-faker-to-gemfile">Adding Faker to Gemfile</h4>
+  <pre><code class="hljs nginx"><span class="hljs-comment"># Gemfile</span>
+<span class="hljs-comment"># ...</span>
+<span class="hljs-title">gem</span> <span class="hljs-string">'faker'</span>
+<span class="hljs-comment"># ...</span>
+</code></pre>
+  <h4 id="making-seeds">Making Seeds</h4>
+  <p>For our fake data we are going to use a little Lorem Ipsum from Faker and then a random <code>true</code> or <code>false</code> for the <code>is_completed</code>.</p>
+  <pre><code class="hljs sql"># db/seeds.rb
+20.times <span class="hljs-operator"><span class="hljs-keyword">do</span>
+  Todo.<span class="hljs-keyword">create</span>(
+    title: Faker::Lorem.words.<span class="hljs-keyword">join</span>(<span class="hljs-string">' '</span>),
+    is_completed: [<span class="hljs-literal">true</span>, <span class="hljs-literal">false</span>].<span class="hljs-keyword">sample</span>
+  )
+<span class="hljs-keyword">end</span>
+</span></code></pre>
+  <p>Now we can use rake to run the seeds.</p>
+  <pre><code class="hljs bash">bundle <span class="hljs-built_in">exec</span> rake db:seed
+</code></pre>
+  <p>Now we can refresh <code>http://localhost:3000/todos</code> to verify that our seeds works.</p>
+  <img src="http://com-ryanlabouve-blog.s3.amazonaws.com/ep1-data-preview.png" alt="Preview of Seed Data">
+  <h3 id="switching-to-active-model-serializer">Switching to Active Model Serializer</h3>
+  <p><a href="https://github.com/rails-api/active_model_serializers">Active Model Serializer</a> is is what we’ll use to craft the JSON that our API returns. We need to do this because Ember expects a certain format for the JSON to be in, and also because
+    we’ll want to strip off un-needed properties from the JSON.</p>
+  <h4 id="add-active_model_serializer-to-gemfile">Add active_model_serializer to gemfile</h4>
+  <pre><code class="hljs nginx"><span class="hljs-comment"># Gemfile</span>
+<span class="hljs-comment"># ...</span>
+<span class="hljs-title">gem</span> <span class="hljs-string">'faker'</span>
+gem <span class="hljs-string">'active_model_serializers'</span>, <span class="hljs-string">'~&gt; 0.8.1'</span>
+<span class="hljs-comment"># ...</span>
+</code></pre>
+  <p>_Please note, if you do <code>gem 'active_model_serializers'</code> without a version number after it, you are entering a world of pain._</p>
+  <h4 id="generate-serializer">Generate serializer</h4>
+  <p>The serializer file, which we are generating, is the file that affects the JSON.</p>
+  <pre><code class="hljs nginx"><span class="hljs-title">rails</span> g serializer Todo id title is_completed
+</code></pre>
+  <p>Let’s look at the file we just created, <code>serializers/todo_serializer.rb</code>. Anything that’s listed in <code>attributes</code> is added to the JSON. Anything that’s that’s ommited form <code>attributes</code> is left out.</p>
+  <pre><code class="hljs ruby"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TodoSerializer</span> <span class="hljs-inheritance">&lt; <span class="hljs-parent">ActiveModel::Serializer</span></span></span>
+  attributes <span class="hljs-symbol">:id</span>, <span class="hljs-symbol">:title</span>, <span class="hljs-symbol">:is_completed</span>
+<span class="hljs-keyword">end</span>
+</code></pre>
+  <p>Then if we refersh <code>http://localhost:3000/todos</code>, we’ll also notice that we have a <code>todos:</code> root for our json (which is what Ember expects), and we have ommited all unneeded properties from our objects (i.e. created_at and updated_at).</p>
+  <img src="http://com-ryanlabouve-blog.s3.amazonaws.com/ep1-after-serializer.png" alt="After Serializer">
+  <h2 id="switching-ember-app-to-activemodeladapter">Switching Ember App to ActiveModelAdapter</h2>
+  <p>So now let’s go back to TodoMVC and switch to using our API.</p>
+  <h3 id="boot-ember-with-proxy">Boot Ember with Proxy</h3>
+  <p>Let’s assume that our API will still be running on <code>http://localhost:3000/</code> and boot ember using a <code>--proxy</code> flag to route all relevant traffic through our api.</p>
+  <pre><code class="hljs nginx"><span class="hljs-title">ember</span> serve --proxy <span class="hljs-url">http://localhost:3000</span>
+</code></pre>
+  <h3 id="switch-the-adapter">Switch the Adapter</h3>
+  <p>And finally, let’s switch our whole app to run off the API we just built! (Surprise! We only change one line of Ember code).</p>
+  <pre><code class="hljs javascript"><span class="hljs-keyword">import</span> DS <span class="hljs-keyword">from</span> <span class="hljs-string">'ember-data'</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> DS.ActiveModelAdapter.extend({
+});
+</code></pre>
+  <p>Now go to the browser and check it out!</p>
+  <img src="http://com-ryanlabouve-blog.s3.amazonaws.com/ep1-todomvc.png" alt="Todomvc with API">
+  <p>Thanks for joining me on part one of Ember Problems. Next time we’ll be looking at pagination.</p>
+  <h3 id="edit-also-update-the-serializer">EDIT!: Also, Update the Serializer</h3>
+  <p>Make sure you are using <code>ActiveModelSerializer</code> so the names are correctly translating from Ember camelCase style to Rails rails_underscore_style. This will be in <code>app/serializers/application.js</code></p>
+  <pre><code class="hljs javascript"><span class="hljs-keyword">import</span> DS <span class="hljs-keyword">from</span> <span class="hljs-keyword">import</span> DS <span class="hljs-keyword">from</span> <span class="hljs-string">'ember-data'</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> DS.ActiveModelSerializer.extend({});
+</code></pre>
+  <p>Here is the final code: <a href="https://github.com/ryanlabouve/todomvc-embercli/tree/ep1">ryanlabouve/todomvc-embercli/tree/ep1</a>.</p>
+</div>

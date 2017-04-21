@@ -1,0 +1,635 @@
+<div class="post lg-px4">
+  <p>Goal:</p>
+  <blockquote>
+    <p>Serve an API backed blog with Public (available to everyone) and Private posts (have to log in to see).</p>
+  </blockquote>
+  <img src="http://com-ryanlabouve-blog.s3.amazonaws.com/final-product-anno.jpg" alt="Final Product">
+  <p>Welcome to part 2. Haven't done part 1 yet? Catch up <a href="http://ryanlabouve.com/ember-blog-with-jwt-and-esa/">here</a>.</p>
+  <p>Today we are going to focus on installing and customizing Ember Simple Auth, TDD'ing and building features along the way.</p>
+  <p>Here's the Specific Agenda:</p>
+  <ol>
+    <li>Install addon</li>
+    <li>Extend mirage to mock our API's authentication/authorization</li>
+    <li>Implement login form and Custom Authenticator (ESA)</li>
+    <li>Implement private-posts and an Custom Authorizer (ESA)</li>
+    <li>Use bootstrap to style things up a bit</li>
+  </ol>
+  <p>Let's get started</p>
+  <pre><code class="hljs nginx"><span class="hljs-title">ember</span> install ember-simple-auth
+</code></pre>
+  <h2 id="extending-mirage-to-test-auth">Extending Mirage to Test Auth</h2>
+  <p>We'll need to customize ESA to how our API handles authentication. To guide our customization, we are going to make mirage act like our server does currently</p>
+  <p>Good testing here gives us the benefit of a tight feedback loop, even when things get particularly tricky (as they do with installing anything auth related).</p>
+  <h3 id="using-authenticators-to-request-our-token">Using Authenticators to Request our Token</h3>
+  <p>In vanilla CURL language, to request a token we need to <code>POST</code> to a specified endpoint, with our username and password in a specified format.</p>
+  <p>In our case, that means:</p>
+  <pre><code class="hljs cpp">POST http:<span class="hljs-comment">//localhost:3000/knock/auth_token</span>
+{ <span class="hljs-string">"auth"</span> : { <span class="hljs-string">"email"</span>: <span class="hljs-string">"lester@tester.com"</span>, <span class="hljs-string">"password"</span> : <span class="hljs-string">"test1234"</span> }}
+</code></pre>
+  <p>If it's successful, we'll get back a <code>201 Created</code> along with the token associated to our user.</p>
+  <pre><code class="hljs cpp"><span class="hljs-number">201</span> Created
+{ <span class="hljs-string">"jwt"</span> : <span class="hljs-string">"token123456789"</span> }
+</code></pre>
+  <p>If the username and password are incorrect we'll get a <code>404</code>.</p>
+  <p>Let's start by simulating this in mirage:</p>
+  <pre><code class="hljs coffeescript"><span class="hljs-keyword">this</span>.post(<span class="hljs-string">'/knock/auth'</span>, <span class="hljs-function"><span class="hljs-params">(db, request)</span> =&gt;</span>  {
+  const req = JSON.parse(request.requestBody);
+  const pw = Ember.get(req, <span class="hljs-string">'auth.password'</span>);
+
+  <span class="hljs-keyword">if</span>(pw === <span class="hljs-string">'test1234'</span>) {
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> Mirage.Response(<span class="hljs-number">201</span>, {}, { <span class="hljs-attribute">jwt</span>: <span class="hljs-string">'hotdog'</span> });
+  } <span class="hljs-keyword">else</span> {
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> Mirage.Response(<span class="hljs-number">404</span>, {}, {});
+  }
+});
+</code></pre>
+  <blockquote>
+    <p><code>hotdog</code> will be the token we use for testing... because I was hungry when I wrote this.</p>
+  </blockquote>
+  <h3 id="making-authorized-requests-with-hotdog-">Making Authorized Requests with <code>hotdog</code></h3>
+  <p>And when we make requests, we pass the token</p>
+  <pre><code class="hljs cpp">Authorization: Bearer hotdog
+GET /<span class="hljs-keyword">private</span>-posts
+</code></pre>
+  <p>Assuming our token is correct, the request will process normally. If the token is invalid, then we'll get a <code>401 Unauthorized</code>.</p>
+  <p>To simulate this in mirage, we'll do</p>
+  <pre><code class="hljs cs">  <span class="hljs-comment">// mirage/config.js</span>
+  ...
+
+  <span class="hljs-keyword">this</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">'/private-posts'</span>, ({ privatePost }, request) =&gt; {
+    <span class="hljs-keyword">const</span> token = Ember.<span class="hljs-keyword">get</span>(request, <span class="hljs-string">'requestHeaders.Authorization'</span>);
+    <span class="hljs-keyword">if</span> (token === <span class="hljs-string">'Bearer hotdog'</span>) {
+      <span class="hljs-keyword">return</span> privatePost.all();
+    } <span class="hljs-keyword">else</span> {
+      <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> Mirage.Response(<span class="hljs-number">401</span>, {}, {});
+    }
+  });
+  ...
+</code></pre>
+  <h3 id="mirage-for-our-priavteposts">Mirage for our PriavtePosts</h3>
+  <p>We'll repeat the process early for getting the <code>PrivatePost</code> resource setup in mirage.</p>
+  <pre><code class="hljs nginx"><span class="hljs-title">ember</span> g mirage-model privatePost
+ember g mirage-factory privatePost
+</code></pre>
+  <p>And again, this should make the Schema from the API <code>PrivatePost(title:string, body:text, type:string)</code>.</p>
+  <pre><code class="hljs javascript"><span class="hljs-comment">// mirage/factories/private-post.js</span>
+<span class="hljs-keyword">import</span> { Factory, faker } <span class="hljs-keyword">from</span> <span class="hljs-string">'ember-cli-mirage'</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> Factory.extend({
+  body: faker.lorem.words(),
+  title: faker.lorem.paragraphs(),
+  createdAt: faker.date.past()
+});
+</code></pre>
+  <p>(<a href="https://github.com/ryanlabouve/ember-jwt-esa-blog/commit/ffdd071f87a16dd6f5b64313016d1661b80bfa2f">checkpoint</a>)</p>
+  <p>So far, we've just been doing enough setup to mock how our server currently works. Let's dive into implementing some stuff now.</p>
+  <h2 id="implement-login-form-and-custom-authenticator-esa-">Implement login form and Custom Authenticator (ESA)</h2>
+  <p>To create our tight feedback loop, we'll go ahead and work on <code>{{login-form}}</code>, since this will be able to quickly hit logging in and out.</p>
+  <p>Here are the main cases we want to handle:</p>
+  <ul>
+    <li>If a user is not logged in, they see a login form</li>
+    <li>If a user is logged in, they see a logout button</li>
+    <li>A user can logout</li>
+    <li>A user can login</li>
+    <li>If a user puts in the wrong login credentials, they see a login error</li>
+  </ul>
+  <blockquote>
+    <p>This process seems tedious, but focusing on TDD our way through helps us keep focus and make consistent progress on a good path.</p>
+  </blockquote>
+  <p>Generate the Test:</p>
+  <pre><code class="hljs nginx"><span class="hljs-title">ember</span> g acceptance-test login-form
+</code></pre>
+  <p>I am going to make a fairly presumptuous first pass at this. In reality, you might bounce back and forth a lot more to expand this test over time.</p>
+  <pre><code class="hljs javascript"><span class="hljs-comment">// tests/acceptance/login-form-test.js</span>
+
+<span class="hljs-keyword">import</span> { test } <span class="hljs-keyword">from</span> <span class="hljs-string">'qunit'</span>;
+<span class="hljs-keyword">import</span> moduleForAcceptance <span class="hljs-keyword">from</span> <span class="hljs-string">'ember-jwt-esa-blog/tests/helpers/module-for-acceptance'</span>;
+<span class="hljs-keyword">import</span> Ember <span class="hljs-keyword">from</span> <span class="hljs-string">'ember'</span>;
+
+<span class="hljs-comment">// These test helps are included with ESA, and</span>
+<span class="hljs-comment">// are absolutely critical for sane testing.</span>
+<span class="hljs-keyword">import</span> {
+  currentSession,
+  invalidateSession ,
+  authenticateSession
+} <span class="hljs-keyword">from</span> <span class="hljs-string">'ember-jwt-esa-blog/tests/helpers/ember-simple-auth'</span>;
+
+moduleForAcceptance(<span class="hljs-string">'Acceptance | login form'</span>);
+
+
+test(<span class="hljs-string">'If a user is not logged in, they see a login form'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">assert</span>) </span>{
+  invalidateSession(<span class="hljs-keyword">this</span>.application);
+  visit(<span class="hljs-string">'/'</span>);
+
+  andThen(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
+    <span class="hljs-keyword">const</span> loginFormPresent = find(<span class="hljs-string">'#loginForm'</span>).length &gt; <span class="hljs-number">0</span> ? <span class="hljs-literal">true</span> : <span class="hljs-literal">false</span>;
+    assert.equal(loginFormPresent, <span class="hljs-literal">true</span>);
+  });
+});
+
+test(<span class="hljs-string">'if a user is logged in, they see a logout form'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">assert</span>) </span>{
+  authenticateSession(<span class="hljs-keyword">this</span>.application);
+  visit(<span class="hljs-string">'/'</span>);
+
+  andThen(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
+    assert.equal(currentURL(), <span class="hljs-string">'/'</span>);
+    <span class="hljs-keyword">const</span> logoutBtnPresent = <span class="hljs-keyword">this</span>.$(<span class="hljs-string">'.logoutBtn'</span>).length &gt; <span class="hljs-number">0</span> ? <span class="hljs-literal">true</span> : <span class="hljs-literal">false</span>;
+    assert.equal(
+      logoutBtnPresent,
+      <span class="hljs-literal">true</span>,
+      <span class="hljs-string">'An authed user should see the logout button'</span>
+    );
+
+    <span class="hljs-keyword">const</span> loginFormPresent = find(<span class="hljs-string">'#loginForm'</span>).length &gt; <span class="hljs-number">0</span> ? <span class="hljs-literal">true</span> : <span class="hljs-literal">false</span>;
+    assert.equal(
+      loginFormPresent,
+      <span class="hljs-literal">false</span>,
+      <span class="hljs-string">'An authed user not should see the login form'</span>
+    );
+  });
+});
+
+test(<span class="hljs-string">'user can logout'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">assert</span>) </span>{
+  authenticateSession(<span class="hljs-keyword">this</span>.application);
+  visit(<span class="hljs-string">'/'</span>);
+  click(<span class="hljs-string">'.logoutBtn'</span>);
+
+  andThen(() =&gt; {
+    <span class="hljs-keyword">const</span> sesh = currentSession(<span class="hljs-keyword">this</span>.application);
+    <span class="hljs-keyword">const</span> isAuthed = Ember.get(sesh, <span class="hljs-string">'isAuthenticated'</span>);
+    assert.equal(
+      isAuthed,
+      <span class="hljs-literal">false</span>,
+      <span class="hljs-string">'After clicking logout, the user is no longer logged in'</span>
+    );
+
+  });
+});
+
+test(<span class="hljs-string">'user can login'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">assert</span>) </span>{
+  invalidateSession(<span class="hljs-keyword">this</span>.application);
+  visit(<span class="hljs-string">'/'</span>);
+
+  fillIn(<span class="hljs-string">'.username-field'</span>, <span class="hljs-string">'lester@test.com'</span>);
+  fillIn(<span class="hljs-string">'.password-field'</span>, <span class="hljs-string">'test1234'</span>);
+  click(<span class="hljs-string">'.login-btn'</span>);
+
+  andThen(() =&gt; {
+    <span class="hljs-keyword">const</span> sesh = currentSession(<span class="hljs-keyword">this</span>.application);
+    <span class="hljs-keyword">const</span> isAuthed = Ember.get(sesh, <span class="hljs-string">'isAuthenticated'</span>);
+    assert.equal(
+      isAuthed,
+      <span class="hljs-literal">true</span>,
+      <span class="hljs-string">'after a user submits good creds to login form, they are logged in'</span>
+    );
+
+    <span class="hljs-keyword">const</span> loginFormPresent = find(<span class="hljs-string">'#loginForm'</span>).length &gt; <span class="hljs-number">0</span> ? <span class="hljs-literal">true</span> : <span class="hljs-literal">false</span>;
+    assert.equal(
+      loginFormPresent,
+      <span class="hljs-literal">false</span>,
+      <span class="hljs-string">'after we login, the login form disappears'</span>
+    )
+  });
+});
+
+test(<span class="hljs-string">'If a user puts in the wrong login credentials, they see a login error'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">assert</span>) </span>{
+  invalidateSession(<span class="hljs-keyword">this</span>.application);
+  visit(<span class="hljs-string">'/'</span>);
+
+  fillIn(<span class="hljs-string">'.username-field'</span>, <span class="hljs-string">'lester@test.com'</span>);
+  fillIn(<span class="hljs-string">'.password-field'</span>, <span class="hljs-string">'wrongPassword'</span>);
+  click(<span class="hljs-string">'.login-btn'</span>);
+
+  andThen(() =&gt; {
+    <span class="hljs-keyword">const</span> sesh = currentSession(<span class="hljs-keyword">this</span>.application);
+    <span class="hljs-keyword">const</span> isAuthed = Ember.get(sesh, <span class="hljs-string">'isAuthenticated'</span>);
+    assert.equal(
+      isAuthed,
+      <span class="hljs-literal">false</span>,
+      <span class="hljs-string">'User submits bad username and password, fails'</span>
+    );
+
+    <span class="hljs-keyword">const</span> isShowingLoginFails = find(<span class="hljs-string">'.login-err'</span>).length &gt; <span class="hljs-number">0</span> ? <span class="hljs-literal">true</span> : <span class="hljs-literal">false</span>;
+    assert.equal(
+      isShowingLoginFails,
+      <span class="hljs-literal">true</span>,
+      <span class="hljs-string">'Shows user an error when they put in bad deets'</span>
+    );
+
+    <span class="hljs-keyword">const</span> loginFormPresent = find(<span class="hljs-string">'#loginForm'</span>).length &gt; <span class="hljs-number">0</span> ? <span class="hljs-literal">true</span> : <span class="hljs-literal">false</span>;
+    assert.equal(
+      loginFormPresent,
+      <span class="hljs-literal">true</span>,
+      <span class="hljs-string">'and we can still see the login form'</span>
+    )
+  });
+});
+</code></pre>
+  <p>Right now our tests make a giant wall of "better luck next time". Let's just start picking from the top.</p>
+  <img src="http://com-ryanlabouve-blog.s3.amazonaws.com/part2-fu-tests.jpg" alt="fu tests">
+  <h4 id="login-form">Login Form</h4>
+  <p>Generate login form component:</p>
+  <pre><code class="hljs nginx"><span class="hljs-title">ember</span> g component login-form --pod
+</code></pre>
+  <p>And a first pass at a very basic login form with fields that match what we already wrote in our test:</p>
+  <pre><code class="hljs cs"><span class="hljs-comment">// app/components/login-form/template.hbs</span>
+&lt;div id=<span class="hljs-string">"loginForm"</span>&gt;
+  {{<span class="hljs-preprocessor">#<span class="hljs-keyword">if</span> loginError}}</span>
+    &lt;div <span class="hljs-keyword">class</span>=<span class="hljs-string">"login-err alert alert-error"</span>&gt;Bad deets dude.&lt;/div&gt;
+  {{/<span class="hljs-keyword">if</span>}}
+
+  {{input
+    <span class="hljs-keyword">value</span>=identification
+    placeholder=<span class="hljs-string">"identification"</span>
+    <span class="hljs-keyword">class</span>=<span class="hljs-string">"username-field"</span>}}
+  {{input
+    type=<span class="hljs-string">"password"</span>
+    placeholder=<span class="hljs-string">"password"</span>
+    <span class="hljs-keyword">value</span>=password
+    <span class="hljs-keyword">class</span>=<span class="hljs-string">"password-field"</span>}}
+  &lt;a href=<span class="hljs-string">"/login"</span>
+     <span class="hljs-keyword">class</span>=<span class="hljs-string">"login-btn btn btn-primary"</span>
+     {{action <span class="hljs-string">"login"</span>}}&gt;
+    Login
+  &lt;/a&gt;
+&lt;/div&gt;
+</code></pre>
+  <p>Cool. More red. Not a ton-o-info from the actual tests, so let's check out our console. <code>.logoutBtn</code> not found.</p>
+  <img src="http://com-ryanlabouve-blog.s3.amazonaws.com/part2-2-fu-tests.jpg" alt="fu tests 2">
+  <h4 id="logout-form">Logout Form</h4>
+  <p>The strategy here is to use the <code>session</code> from ESA to show a login form, unless we are <code>session.isAuthenticated</code>, where we'll show a logout form.</p>
+  <p>First, let's get the session in our component</p>
+  <pre><code class="hljs javascript"><span class="hljs-comment">// app/components/login-form/component.js</span>
+<span class="hljs-keyword">import</span> Ember <span class="hljs-keyword">from</span> <span class="hljs-string">'ember'</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> Ember.Component.extend({
+  session: Ember.inject.service()
+});
+</code></pre>
+  <p>And next, we'll add the branch logic.</p>
+  <pre><code class="hljs cs">{{<span class="hljs-preprocessor">#unless session.isAuthenticated}}</span>
+    ... login form <span class="hljs-keyword">from</span> earlier
+{{<span class="hljs-keyword">else</span>}}
+  &lt;a href=<span class="hljs-string">"/logout"</span>
+     <span class="hljs-keyword">class</span>=<span class="hljs-string">"logoutBtn"</span>
+     {{action <span class="hljs-string">"signout"</span>}}&gt;
+    logout
+  &lt;/a&gt;
+{{/unless}}
+</code></pre>
+  <p>(<a href="https://github.com/ryanlabouve/ember-jwt-esa-blog/commit/192cf82d074f35a1b363133f78ac520860c63464">checkpoint</a>)</p>
+  <p>New batch of errors! Let's go ahead and add the <code>login</code> and <code>signout</code> actions it's complaining about.</p>
+  <pre><code class="hljs javascript"><span class="hljs-keyword">import</span> Ember <span class="hljs-keyword">from</span> <span class="hljs-string">'ember'</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> Ember.Component.extend({
+  session: Ember.inject.service(),
+  actions: {
+    login() {
+      <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+    },
+    signout() {
+      <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+    }
+  }
+});
+</code></pre>
+  <h3 id="ember-simple-auth-the-tricky-parts">Ember Simple Auth: The Tricky Parts</h3>
+  <p>This part is tricky. Auth is a hard problem to solve, so any library that does it well will involve a bit of config.</p>
+  <h4 id="kickoff-configure">Kickoff &amp; Configure</h4>
+  <p>Let's generate our custom authenticator and authorizer, which will generated stubbed out versions of the files. </p>
+  <pre><code class="hljs cpp">ember g authenticator knockjwt
+<span class="hljs-comment">// =&gt; create app/authenticators/knockjwt.js</span>
+
+ember g authorizer knockjwt
+<span class="hljs-comment">// =&gt; create app/authorizer/knockjwt.js</span>
+</code></pre>
+  <p>SO we can see what's going on, I suggest dropping debuggers in the critical parts of what was generated so we can see what's calling what.</p>
+  <p>Authorizer:</p>
+  <pre><code class="hljs javascript"><span class="hljs-comment">// app/authorizer/knockjwt.js</span>
+<span class="hljs-keyword">import</span> Base <span class="hljs-keyword">from</span> <span class="hljs-string">'ember-simple-auth/authorizers/base'</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> Base.extend({
+  authorize(<span class="hljs-comment">/*data, block*/</span>) {
+    <span class="hljs-keyword">debugger</span>;
+  }
+});
+</code></pre>
+  <p>Authenticator:</p>
+  <pre><code class="hljs javascript"><span class="hljs-keyword">import</span> Ember <span class="hljs-keyword">from</span> <span class="hljs-string">'ember'</span>;
+<span class="hljs-keyword">import</span> Base <span class="hljs-keyword">from</span> <span class="hljs-string">'ember-simple-auth/authenticators/base'</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> Base.extend({
+  restore(data) {
+    <span class="hljs-keyword">debugger</span>;
+  },
+
+  <span class="hljs-comment">// This method will make the call to our auth server</span>
+  authenticate(<span class="hljs-comment">/*args*/</span>) {
+    <span class="hljs-keyword">debugger</span>;
+  },
+
+  invalidate(data) {
+    <span class="hljs-keyword">debugger</span>;
+  }
+});
+</code></pre>
+  <p>And a little configure for ESA to recognize our custom auth and API situation:</p>
+  <pre><code class="hljs cs"><span class="hljs-comment">// config/environment.js</span>
+
+  ENV[<span class="hljs-string">'simple-auth'</span>] = {
+    store: <span class="hljs-string">'simple-auth-session-store:local-storage'</span>,
+    authorizer: <span class="hljs-string">'authorizer:knockjwt'</span>,
+    crossOriginWhiteList: [<span class="hljs-string">'http://localhost:3000'</span>],
+    routeAfterAuthentication: <span class="hljs-string">'/'</span>
+  }
+</code></pre>
+  <p>Let's also use the <a href="http://ember-simple-auth.com/api/classes/ApplicationRouteMixin.html">ApplicationRouteMixin</a> for the application route.</p>
+  <pre><code class="hljs javascript"><span class="hljs-comment">// app/routes/application.js</span>
+<span class="hljs-keyword">import</span> Ember <span class="hljs-keyword">from</span> <span class="hljs-string">'ember'</span>;
+<span class="hljs-keyword">import</span> ApplicationRouteMixin <span class="hljs-keyword">from</span> <span class="hljs-string">'ember-simple-auth/mixins/application-route-mixin'</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> Ember.Route.extend(ApplicationRouteMixin, {
+  model() {
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.store.findAll(<span class="hljs-string">'publicPost'</span>);
+  }
+});
+</code></pre>
+  <p>This will also mean you need to <code>needs: ['service:session']</code> to make the <a href="https://github.com/ryanlabouve/ember-jwt-esa-blog/commit/76b111ceb19ebc5c130f1d3b0d4a34d4fd120270">application unit test pass</a> for the route unit test.</p>
+  <h4 id="customize-the-authenticator">Customize the Authenticator</h4>
+  <p>Ok. Now let's make the authentication call using our custom <code>application:knockjwt</code>. This should hit the debugger and we can step through what's happening.</p>
+  <pre><code class="hljs cs"><span class="hljs-comment">// app/components/login-form/component.js</span>
+login() {
+    <span class="hljs-comment">// reset login error on each attempt</span>
+    <span class="hljs-keyword">this</span>.<span class="hljs-keyword">set</span>(<span class="hljs-string">'loginError'</span>, <span class="hljs-keyword">false</span>);
+
+    <span class="hljs-keyword">const</span> { identification, password } = <span class="hljs-keyword">this</span>.getProperties( <span class="hljs-string">'identification'</span>, <span class="hljs-string">'password'</span>);
+    <span class="hljs-keyword">const</span> s = <span class="hljs-keyword">this</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">'session'</span>);
+
+    s.authenticate(<span class="hljs-string">'authenticator:knockjwt'</span>, { identification, password }).<span class="hljs-keyword">catch</span>(() =&gt; {
+        <span class="hljs-comment">// If login fails, just set an error</span>
+        <span class="hljs-comment">// so the error UI shows up</span>
+        <span class="hljs-keyword">this</span>.<span class="hljs-keyword">set</span>(<span class="hljs-string">'loginError'</span>, <span class="hljs-keyword">true</span>);
+    });
+}
+</code></pre>
+  <p>Cool. Run <code>http://localhost:4200/tests</code> again. We get to the authenticator's authenticate method!</p>
+  <p>And we know, in order to get token, we'll need to <code>POST /knock_auth</code> with the credentials. So let's go ahead and do that:</p>
+  <pre><code class="hljs javascript"><span class="hljs-keyword">import</span> Ember <span class="hljs-keyword">from</span> <span class="hljs-string">'ember'</span>;
+<span class="hljs-keyword">import</span> Base <span class="hljs-keyword">from</span> <span class="hljs-string">'ember-simple-auth/authenticators/base'</span>;
+<span class="hljs-comment">// import host from our environment</span>
+<span class="hljs-keyword">import</span> config <span class="hljs-keyword">from</span> <span class="hljs-string">'../config/environment'</span>;
+
+<span class="hljs-keyword">const</span> { RSVP: { <span class="hljs-built_in">Promise</span> }, $: { ajax }, run } = Ember;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> Base.extend({
+  tokenEndpoint: <span class="hljs-string">`<span class="hljs-subst">${config.host}</span>/knock/auth_token`</span>,
+
+  restore(data) {
+    <span class="hljs-keyword">debugger</span>;
+  },
+
+  authenticate(creds) {
+    <span class="hljs-keyword">const</span> { identification, password } = creds;
+
+    <span class="hljs-keyword">const</span> data = <span class="hljs-built_in">JSON</span>.stringify({
+      auth: {
+        email: identification,
+        password
+      }
+    });
+
+    <span class="hljs-keyword">const</span> requestOptions = {
+      url: <span class="hljs-keyword">this</span>.tokenEndpoint,
+      type: <span class="hljs-string">'POST'</span>,
+      data,
+      contentType: <span class="hljs-string">'application/json'</span>,
+      dataType: <span class="hljs-string">'json'</span>
+    };
+
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Promise</span>((resolve, reject) =&gt; {
+      ajax(requestOptions).then((response) =&gt; {
+        <span class="hljs-keyword">const</span> { jwt } = response;
+        run((response) =&gt; {
+          resolve({
+            token: jwt
+          });
+        });
+      }, (error) =&gt; {
+        run(() =&gt; {
+          reject(error);
+        });
+      });
+    });
+  },
+
+  invalidate(data) {
+    <span class="hljs-comment">// debugger;</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-built_in">Promise</span>.resolve(data);
+  }
+
+  }
+});
+</code></pre>
+  <img src="http://com-ryanlabouve-blog.s3.amazonaws.com/part2-3-fu-tests.jpg" alt="user can login">
+  <h4 id="logging-user-out">Logging User Out</h4>
+  <p>This is quite a bit easier than the login portion:</p>
+  <pre><code class="hljs cs"><span class="hljs-comment">// app/components/login-form/component.js</span>
+...
+signout() {
+  <span class="hljs-keyword">this</span>.<span class="hljs-keyword">get</span>(<span class="hljs-string">'session'</span>).invalidate();
+}
+</code></pre>
+  <p>(Please see <a href="https://github.com/ryanlabouve/ember-jwt-esa-blog/commit/2e96f83c710f9134ed7acabcf6fb5279ee536838">this change</a> I made for the login-form integration test to pass.)</p>
+  <blockquote>
+    <p>Danger! Our tests are green right now, but we know we haven't implemented Authorizer's <code>restore</code>. I'd honestly want to dive into some unit tests at this point, but I think I'll save that for a future post. Check out the ones that simple
+      auth des for the <a href="https://github.com/simplabs/ember-simple-auth/blob/master/tests/unit/authenticators/devise-test.js">devise authenticator</a> in the meantime for a good example.</p>
+  </blockquote>
+  <pre><code class="hljs coffeescript">  <span class="hljs-regexp">//</span> When page refreshes, we have the ability
+  <span class="hljs-regexp">//</span> to inspect ESA data <span class="hljs-keyword">and</span> see <span class="hljs-keyword">if</span> we can restore
+  restore(data) {
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> Promise(<span class="hljs-function"><span class="hljs-params">(resolve, reject)</span> =&gt;</span> {
+      <span class="hljs-keyword">if</span> (!Ember.isEmpty(data.token)) {
+        resolve(data);
+      } <span class="hljs-keyword">else</span> {
+        reject();
+      }
+    });
+  }
+</code></pre>
+  <p>(<a href="https://github.com/ryanlabouve/ember-jwt-esa-blog/commit/680376e2fced0ed0fc294aac2881c7d4e7f4620c">checkpoint</a>)</p>
+  <h3 id="implement-privateposts-and-custom-authorizer">Implement PrivatePosts and Custom Authorizer</h3>
+  <p>After we have successfully logged in, the authorizer is what allows us to take the login token and pass it with our request to the server.</p>
+  <p>The best way to get this working is TDD private-posts.</p>
+  <pre><code class="hljs cpp">ember g acceptance-test <span class="hljs-keyword">private</span>-post
+</code></pre><pre><code class="hljs javascript"><span class="hljs-keyword">import</span> { test } <span class="hljs-keyword">from</span> <span class="hljs-string">'qunit'</span>;
+<span class="hljs-keyword">import</span> moduleForAcceptance <span class="hljs-keyword">from</span> <span class="hljs-string">'ember-jwt-esa-blog/tests/helpers/module-for-acceptance'</span>;
+
+<span class="hljs-keyword">import</span> {
+  invalidateSession ,
+  authenticateSession
+} <span class="hljs-keyword">from</span> <span class="hljs-string">'ember-jwt-esa-blog/tests/helpers/ember-simple-auth'</span>;
+
+moduleForAcceptance(<span class="hljs-string">'Acceptance | private post'</span>);
+
+test(<span class="hljs-string">'see private posts when authed'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">assert</span>) </span>{
+  authenticateSession(<span class="hljs-keyword">this</span>.application);
+  server.createList(<span class="hljs-string">'private-post'</span>, <span class="hljs-number">5</span>);
+  visit(<span class="hljs-string">'/'</span>);
+  andThen(() =&gt; {
+    assert.equal(
+      find(<span class="hljs-string">'.private-post'</span>).length,
+      <span class="hljs-number">5</span>,
+      <span class="hljs-string">'we can see the right number of private posts when we are logged in'</span>
+    );
+  });
+});
+
+test(<span class="hljs-string">'see no private posts not authed'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">assert</span>) </span>{
+  server.createList(<span class="hljs-string">'private-post'</span>, <span class="hljs-number">5</span>);
+  invalidateSession(<span class="hljs-keyword">this</span>.application);
+  visit(<span class="hljs-string">'/'</span>);
+  andThen(() =&gt; {
+    assert.equal(
+      find(<span class="hljs-string">'.private-post'</span>).length,
+      <span class="hljs-number">0</span>,
+      <span class="hljs-string">'we can\'t see any private posts when we are not logged in'</span>
+    );
+  });
+});
+</code></pre>
+  <p>Generate our <code>{{private-posts}}</code> component.</p>
+  <pre><code class="hljs cpp">ember g component <span class="hljs-keyword">private</span>-posts --pod
+</code></pre>
+  <p>Add component to application template</p>
+  <pre><code class="hljs cpp"><span class="hljs-comment">// app/templates/application.hbs</span>
+{{login-form}}
+&lt;br /&gt;
+{{<span class="hljs-keyword">public</span>-posts posts=model}}
+{{<span class="hljs-keyword">private</span>-posts}}
+</code></pre>
+  <p>There are a couple different ways to handle loading in the <code>PrivatePosts</code>, but I'm going to opt to handle all of that from the {{private-posts}} component. So you'll notice we are going to inject the store and the session, and then load them
+    only if we are authenticated and conditionally when our authentication status changes.</p>
+  <pre><code class="hljs javascript"><span class="hljs-comment">// app/components/private-posts/component.js</span>
+<span class="hljs-keyword">import</span> Ember <span class="hljs-keyword">from</span> <span class="hljs-string">'ember'</span>;
+
+<span class="hljs-keyword">const</span> { computed, get } = Ember;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> Ember.Component.extend({
+  session: Ember.inject.service(),
+  store: Ember.inject.service(),
+
+  posts: computed(<span class="hljs-string">'session.isAuthenticated'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
+    <span class="hljs-keyword">const</span> authed = get(<span class="hljs-keyword">this</span>, <span class="hljs-string">'session.isAuthenticated'</span>);
+    <span class="hljs-keyword">const</span> store = get(<span class="hljs-keyword">this</span>, <span class="hljs-string">'store'</span>);
+    <span class="hljs-keyword">if</span> ( authed ) {
+      <span class="hljs-keyword">return</span> store.findAll(<span class="hljs-string">'privatePost'</span>);
+    } <span class="hljs-keyword">else</span> {
+      <span class="hljs-keyword">return</span> <span class="hljs-literal">undefined</span>;
+    }
+  })
+});
+</code></pre>
+  <p>Put out posts in template</p>
+  <pre><code class="hljs cs">{{<span class="hljs-preprocessor">#each posts as |post|}}</span>
+  &lt;div <span class="hljs-keyword">class</span>=<span class="hljs-string">"private-post"</span>&gt;
+    {{blog-post title=post.title body=post.body}}
+  &lt;/div&gt;
+{{/each}}
+</code></pre>
+  <p>No model found, so let's get on that!</p>
+  <pre><code class="hljs cpp">ember g model <span class="hljs-keyword">private</span>-post
+</code></pre>
+  <p>I'd suggest doing the same type of model tests from earlier on the PrivatePost model, but for brevity we'll omit them here.</p>
+  <pre><code class="hljs javascript"><span class="hljs-keyword">import</span> Model <span class="hljs-keyword">from</span> <span class="hljs-string">'ember-data/model'</span>;
+<span class="hljs-keyword">import</span> attr <span class="hljs-keyword">from</span> <span class="hljs-string">'ember-data/attr'</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> Model.extend({
+  title: attr(<span class="hljs-string">'string'</span>),
+  body: attr(<span class="hljs-string">'string'</span>),
+  createdAt: attr(<span class="hljs-string">'date'</span>)
+});
+</code></pre>
+  <p>And now we are getting 401's even when authed. This sounds like it's time to work on our authorizer. We know we are not even hitting it currently, thanks to the debugger we dropped earlier.</p>
+  <p>Let's make our way to the debugger that's currently sitting there.</p>
+  <p>We'll do that by generating an adapter for <code>privatePost</code>, where we'll inform it to use the <code>knockjwt</code> authorizer we made via the <a href="http://ember-simple-auth.com/api/classes/DataAdapterMixin.html">DataAdapterMixin</a>, which
+    is a nice bridge to inform Ember Data of our auth situation.</p>
+  <pre><code class="hljs cpp"><span class="hljs-comment">// remember, adapters describe how ED should request a given resource</span>
+ember g adapter privatePost
+</code></pre>
+  <p>And then our adapter:</p>
+  <pre><code class="hljs javascript"><span class="hljs-keyword">import</span> ApplicationAdapter <span class="hljs-keyword">from</span> <span class="hljs-string">'./application'</span>;
+<span class="hljs-keyword">import</span> DataAdapterMixin <span class="hljs-keyword">from</span> <span class="hljs-string">'ember-simple-auth/mixins/data-adapter-mixin'</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> ApplicationAdapter.extend(DataAdapterMixin, {
+  authorizer: <span class="hljs-string">'authorizer:knockjwt'</span>,
+});
+</code></pre>
+  <p>:boom: we are now seeing the debugger!!</p>
+  <p>To implement the authorizer, we need to focus on passing the relevant token along with the request, then it should work.</p>
+  <pre><code class="hljs javascript"><span class="hljs-keyword">import</span> Base <span class="hljs-keyword">from</span> <span class="hljs-string">'ember-simple-auth/authorizers/base'</span>;
+<span class="hljs-keyword">import</span> Ember <span class="hljs-keyword">from</span> <span class="hljs-string">'ember'</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> Base.extend({
+  session: Ember.inject.service(),
+  authorize(data, block) {
+      <span class="hljs-comment">// If we are testing, just going to hardcode the token</span>
+    <span class="hljs-keyword">if</span> (Ember.testing) {
+      block(<span class="hljs-string">'Authorization'</span>, <span class="hljs-string">'Bearer hotdog'</span>);
+    }
+    <span class="hljs-keyword">const</span> { token } = data;
+    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.get(<span class="hljs-string">'session.isAuthenticated'</span>) &amp;&amp; token) {
+        <span class="hljs-comment">// The way this works is that we are just using</span>
+        <span class="hljs-comment">// xhr.setRequestHeader on the other side of this call</span>
+        <span class="hljs-comment">// here: https://github.com/simplabs/ember-simple-auth/blob/a8723a0d4e8eb256f5a9527de0d8a04aeff94846/addon/mixins/data-adapter-mixin.js#L77</span>
+
+      block(<span class="hljs-string">'Authorization'</span>, <span class="hljs-string">`Bearer <span class="hljs-subst">${token}</span>`</span>);
+    }
+  }
+});
+</code></pre>
+  <p>(<a href="https://github.com/ryanlabouve/ember-jwt-esa-blog/tree/2e96f83c710f9134ed7acabcf6fb5279ee536838">checkpoint</a>)</p>
+  <h2 id="bootstrap-pushing-pixels">Bootstrap &amp; Pushing Pixels</h2>
+  <p>Now that our app works, everything else we do is bonus!</p>
+  <h3 id="bootstrap">BootStrap</h3>
+  <p>Add bootstrap (quick and dirty method):</p>
+  <pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-title">link</span> <span class="hljs-attribute">rel</span>=<span class="hljs-value">"stylesheet"</span> <span class="hljs-attribute">href</span>=<span class="hljs-value">"https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/css/bootstrap.css"</span> &gt;</span>
+</code></pre>
+  <h3 id="adjust-layout">Adjust Layout</h3>
+  <p>Divs divs divs for days!</p>
+  <pre><code class="hljs cs">&lt;div <span class="hljs-keyword">class</span>=<span class="hljs-string">"container m-y-3"</span>&gt;
+  &lt;div <span class="hljs-keyword">class</span>=<span class="hljs-string">"row header"</span>&gt;
+    &lt;div <span class="hljs-keyword">class</span>=<span class="hljs-string">"col-sm-6"</span>&gt;
+      &lt;h1&gt;blog&lt;/h1&gt;
+    &lt;/div&gt;
+    &lt;div <span class="hljs-keyword">class</span>=<span class="hljs-string">"col-sm-6"</span>&gt;
+      {{login-form}}
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div <span class="hljs-keyword">class</span>=<span class="hljs-string">"container"</span>&gt;
+  &lt;div <span class="hljs-keyword">class</span>=<span class="hljs-string">"row body"</span>&gt;
+    &lt;div <span class="hljs-keyword">class</span>=<span class="hljs-string">"col-sm-6"</span>&gt;
+      {{<span class="hljs-keyword">public</span>-posts posts=model}}
+    &lt;/div&gt;
+    &lt;div <span class="hljs-keyword">class</span>=<span class="hljs-string">"col-sm-6"</span>&gt;
+      {{<span class="hljs-keyword">private</span>-posts}}
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+  <h3 id="adjust-components">Adjust Components</h3>
+  <p>From here on out it's just a bunch of small adjustments all over the place. I'm just going to link to the commit and go over a few highlights:</p>
+  <img src="http://com-ryanlabouve-blog.s3.amazonaws.com/final-product.jpg" alt="Final Product">
+  <ul>
+    <li>Due to the HTML / CSS structure required for some bootstrap components, I had to put classesNames on the <code>component.js</code> in several cases.</li>
+    <li>I changed the selectors being used in a few acceptance tests for similar reasons.</li>
+  </ul>
+  <p>(<a href="https://github.com/ryanlabouve/ember-jwt-esa-blog/commit/452b946163fe2f9cae7ec4e8a886bbe7d89194f1">CSS boss battle commit</a>)</p>
+  <blockquote>
+    <p>If it would be useful for anyone for me to walk through this, please let me know on twitter (<a href="http://twitter.com/ryanlabouve">@ryanlabouve</a>). I'd be happy to do this!</p>
+  </blockquote>
+  <h2 id="closing-thoughts">Closing Thoughts</h2>
+  <p>Authentication and Authorization is tricky. I'm hoping this resource will show a no-holds barred example of how to start implementing it on an actual projects using methods you'd be proud of.</p>
+  <p>Please let me know if you have any feedback! Positive or negative, I'd like for this to be as useful as possible so please read out to me on twitter <a href="http://twitter.com/ryanlabouve">@ryanlabouve</a> or on github <a href="https://github.com/ryanlabouve">github.com/ryanlabouve</a>.</p>
+  <p></p>
+</div>

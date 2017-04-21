@@ -1,0 +1,216 @@
+<p>Actions in Ember have chaging drastically since <a href="https://github.com/emberjs/rfcs/blob/master/text/0050-improved-actions.md#re-targeting-the-scope-of-a-closure-action">RFC 50</a>.</p>
+<p>Closure actions have enabled new patterns in both Ember templates and in communicating between child and parent components.</p>
+<p>This guided tour through closure actions evolved from my notes while exploring the changes to actions.</p>
+<h2><a id="Highlevel_changes_6"></a>High-level changes</h2>
+<p>The old-school <code>{{action</code>'s operated in “element space” where the action helper “attaches an event listener that fires a bubbling action”. The action existed on the parent and when invoked via <code>sendAction</code> <a href="http://emberjs.com/api/classes/Ember.ActionSupport.html#method_sendAction">(docs)</a> contained the parent’s lexical scope.</p>
+<p>One massive disadvantage to this approach was that it was impossible to pass a callback to a downstream component from a called action.</p>
+<p>The new <code>(action</code> helper “closes over an action from the current scope so it can be […] passed around and called later.”— which is much easier to work with.</p>
+<p>(All via <a href="https://github.com/emberjs/rfcs/blob/master/text/0050-improved-actions.md">Ember.js’s RFC 50</a>).</p>
+<h2><a id="Closure_action_katas_16"></a>Closure action katas</h2>
+<p>So let’s explore how the new <code>(action</code> helper works.</p>
+<h3><a id="Kata_1_Initial_Observations_20"></a>Kata [1] Initial Observations</h3>
+<pre><code>{{! templates/application.hbs }}
+&lt;button onchange={{action 'firstAction'}}&gt; (2 click button!)
+&lt;input onchange={{action 'secondAction'}}&gt; (3 change input text and hit enter)
+</code></pre>
+<pre><code>// controllers/application.js
+actions: {
+  firstAction() {
+    console.log(...arguments); // =&gt; ?
+    debugger;
+  }
+  secondAction() {
+    console.log(...arguments); // =&gt; ?
+  }
+}
+</code></pre>
+<h4><a id="Questions_41"></a>Questions</h4>
+<ol>
+<li>Is this a closure action? Why/why not?</li>
+<li>What is the value of <code>fistAction</code>'s <code>...arguments</code> after clicking the button?</li>
+<li>What is the value of <code>secondAction</code>'s <code>...arguments</code> after changing the input?</li>
+</ol>
+<p>Here’s a <a href="https://ember-twiddle.com/299e85024c01b21b24dccf922911f702?openFiles=templates.application.hbs%2C">twiddle</a> to play with if you’d like to investigate.</p>
+<h4><a id="Answers_49"></a>Answers</h4>
+<p>1 answer) Yes, we can confirm this by the use of the <code>action</code> helper. Abouve is essentially the same as <code>&lt;input {{action (action 'firstAction')}}&gt;</code>, not to be consued with <code>&lt;input {{action 'firstAction'}}&gt;</code>, which would be using non-closure actions.</p>
+<p>2 answer) It’s a <code>MouseEvent</code>!</p>
+<p>3 answer) It’s an <code>Event</code>! If we look at <code>arguments[0].target.value</code> we can see the value we provided to the input.</p>
+<h4><a id="What_did_we_learn_57"></a>What did we learn?</h4>
+<p>Closure actions give us direct access to vanilla browser events! This means we can reason about the practical boundry between Ember and the browser, and refernce browser api docs for ideas / information for what we can do from there.</p>
+<p>Reference:<br>
+<a href="https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent">https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent</a><br>
+<a href="https://developer.mozilla.org/en-US/docs/Web/API/Event">https://developer.mozilla.org/en-US/docs/Web/API/Event</a><br>
+<a href="https://developer.mozilla.org/en-US/docs/Web/API/UIEvent">https://developer.mozilla.org/en-US/docs/Web/API/UIEvent</a></p>
+<h3><a id="Kata_2_Plucking_the_property_we_want_66"></a>Kata [2] Plucking the property we want</h3>
+<p>We saw previously that the <code>arguments</code> of our action with no passed arguments was the <code>Event</code>. Moving towards using “them fancy template helpers” that are all the rage we need to understand how to manipulate the value we are passing.</p>
+<p>So the question we have going into this is &quot;How do I make how do I make the <code>val</code> in <code>myAction(val)</code> the value of I gave to the <code>&lt;input&gt;</code>. See below if that was confusing:</p>
+<pre><code>{{! templates/application.hbs }}
+&lt;input onchange={{action 'firstAction' target=&quot;target.value&quot;}} /&gt;
+</code></pre>
+<pre><code>// controllers/application.js
+actions: {
+  firstAction(val) {
+    console.log(...argument);
+    console.log(val);
+    debugger;
+  }
+}
+</code></pre>
+<p>With this insight, how does this work with  different types of UI?</p>
+<h4><a id="Questions_90"></a>Questions:</h4>
+<ul>
+<li>
+<ol>
+<li>Print whether a toggle is checked or not</li>
+</ol>
+</li>
+<li>
+<ol start="2">
+<li>Print the value of an input box</li>
+</ol>
+</li>
+<li>
+<ol start="3">
+<li>Get the mouse position of a click inside a box</li>
+</ol>
+</li>
+</ul>
+<h4><a id="Answers_96"></a>Answers:</h4>
+<pre><code>{{! templates/application.hbs }}
+&lt;input type=&quot;checkbox&quot;
+  onchange={{action 'getCheckboxValue' value=&quot;target.checked&quot;}}&gt;
+&lt;input type=&quot;text&quot;
+  placeholder=&quot;Yey input&quot;
+  onchange={{action 'getInputValue' value=&quot;target.value&quot;}}&gt;
+&lt;div class=&quot;box&quot; onclick={{action 'getMousePosition'}}&gt;
+  Box
+  &lt;div class=&quot;marker&quot;&gt;&amp;nbsp;&lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+<pre><code>// controllers/application.js
+  actions: {
+    getCheckboxValue(val) {
+      console.log(...arguments);
+      console.log(val); // [true|false] based on checkbox
+    },
+
+    getInputValue(val) {
+      console.log(...arguments);
+      console.log(val); // value of input
+    },
+
+    getMousePosition({offsetX, offsetY}) {
+      // Could not figure out how to pluck this
+      // Play around in the twiddle.
+      console.log(...arguments);
+      console.log(offsetX, offsetY);
+      Ember.$('.marker').css({top:offsetY , left: offsetX });
+    }
+  }
+</code></pre>
+<p>The magic here is the <code>value</code> path. “The <code>value</code> path is read off of whatever the first argument to the actions is” and pairs nicely with other template helpers as we’ll see in the next Kata.</p>
+<p>Here’s the <a href="https://ember-twiddle.com/914bbf5db70ca61b7ba57978f2821a47?openFiles=templates.application.hbs%2C">twiddle</a>.</p>
+<h4><a id="Additional_observations_139"></a>Additional observations.</h4>
+<p>If plucking arguments from the browser <code>Event</code> is confusing, let’s step back and consider what’s happening. We’ll start by passing an empty tring as the first argument to <code>firstAction</code>.</p>
+<pre><code>{{! templates/application.hbs }}
+&lt;input onchange={{action 'firstAction' '' value=&quot;target.value&quot;}} /&gt;
+</code></pre>
+<pre><code>// controllers/application.js
+actions: {
+  firstAction() {
+    console.log(...argument);
+    debugger;
+  }
+}
+</code></pre>
+<p>The values of the <code>arguments</code> on <code>firstAction</code></p>
+<ol>
+<li>undefined</li>
+<li>The event object</li>
+</ol>
+<p>Referring back to the RFC, “The value path is read off of whatever the first argument to the actions is”.</p>
+<p>So, let’s pass an object as the second argument to verify this.</p>
+<pre><code>{{! templates/application.hbs }}
+&lt;input onchange={{action 'firstAction' myObj value=&quot;target.value&quot;}} /&gt;
+</code></pre>
+<pre><code>// controllers/application.js
+actions: {
+  firstAction() {
+    console.log(...argument);
+    debugger;
+  },
+  myObj: {
+    target: {
+      value: 42
+    }
+  }
+}
+</code></pre>
+<p>Arugments has two elements</p>
+<ol>
+<li>42</li>
+<li>The event object</li>
+</ol>
+<p>Using this same logic is what allows us to figure out how to get what we want from <a href="https://developer.mozilla.org/en-US/docs/Web/API/Event">Event</a>.</p>
+<h3><a id="Kata_3_Call_multiple_actions_from_clicking_on_a_button_192"></a>Kata [3] Call multiple actions from clicking on a button</h3>
+<p>Next, let’s think about how we could call multiple actions at the same time.</p>
+<p>Some example of where we might want to do this in the future:</p>
+<ul>
+<li>Validate a form <code>validateForm()</code> and if valid, <code>submitResponse()</code>.</li>
+<li>Send analytics about button click, make clicking on a buton do something</li>
+</ul>
+<p>But through this example we’ll remain generic.</p>
+<h4><a id="Attempt_1_203"></a>Attempt 1</h4>
+<p>Consider the following code and guess what the output will be.</p>
+<pre><code>{{! templates/application.hbs }}
+&lt;button onclick={{action 'firstAction' 'sectionAction'}}&gt;
+</code></pre>
+<pre><code>// controllers/application.js
+actions: {
+  firstAction() {
+    console.log(...argument);
+    debugger;
+  },
+  sectionAction() {
+    console.log(...argument);
+    debugger;
+  }
+}
+</code></pre>
+<p>I’m afraid I may have misled you. The <code>secondAction</code> was just a string. But threre’s still an important observation to make here.</p>
+<p>In the <code>firstAction</code> we see that <code>arguments</code> has two elements.</p>
+<ol>
+<li>The string ‘secondAction’</li>
+<li>The event object</li>
+</ol>
+<p>When we pass other arguments, we still get the <code>Event</code> as the last argument. Let’s return to the original question of this kata, how do we pass multiple actions?</p>
+<h4><a id="Attempt_2_234"></a>Attempt 2</h4>
+<p>What if we try:</p>
+<pre><code>&lt;button onclick={{action 'firstAction' (action 'secondAction')}}&gt;
+</code></pre>
+<p>The arguments invoked via <code>firstAction</code>:</p>
+<ol>
+<li>An invokable function. In fact, we can call <code>secondAction</code> but doing <code>arguments[0]()</code>.</li>
+<li>The <code>Event</code> still</li>
+</ol>
+<p>Still did not manage to call both functions, but we have re-inforced another important lesson. <code>(action 'actionName')</code> returns an invokable action.</p>
+<h4><a id="Attempt_3_248"></a>Attempt 3</h4>
+<p>Without intorducing new helpers, the only thing we are left with is to pass invokable actions to a new action.</p>
+<pre><code>{{! templates/application.hbs }}
+&lt;button onclick={{action 'newAction'
+                    (action 'firstAction')
+                    (action 'secondAction')}}&gt;
+</code></pre>
+<pre><code>// controllers/application.js
+actions: {
+  newAction() {
+    arguments[0]();
+    arguments[1]();
+  }
+}
+</code></pre>
+<p>Not a pretty solution. But we understand enough of what’s going on here to clean this up later with a nice helper. And this understanding will become fundamental as we continue to work with closure actions.</p>
+<p>Here’s the relevant <a href="https://ember-twiddle.com/1863bca85c3b428d9162937c522de6dd?openFiles=controllers.application.js%2C">twiddle</a>.</p>
+<h3><a id="Intermission_274"></a>Intermission</h3>
+<p>We’ll call this good for a post.</p>
+<p>In the follow up post we will discuss the <code>mut</code> helper and how we can use Ember Composable Actions to simplify some common tasks with closure actions.</p>

@@ -1,0 +1,100 @@
+<div class="post lg-px4">
+  <blockquote>
+    <p>“Weeks of programming can save you hours of planning” —Unknown</p>
+  </blockquote>
+  <p>We are all drunk with power. We can take our dreams and ideas and turn them into apps and websites.</p>
+  <p>It’s so tempting to dive in and start coding with no strategy or plan.</p>
+  <p>As our team takes on more projects and our side-projects begin to turn into platforms, we’ve had to evolve our process.</p>
+  <h3 id="design-sprints">Design Sprints</h3>
+  <p>We now use design sprints. No weeks of research or teams of analysts required. Just everyone putting their heads together and going through a process that we know works. We communicate and validate our ideas first. This gives us <strong>one</strong>    clear direction before we dive in to development.</p>
+  <p>We first read about design sprints at <a href="http://robots.thoughtbot.com/the-product-design-sprint">ThoughtBot</a>, but the concept originates from <a href="http://www.gv.com/lib/the-product-design-sprint-a-five-day-recipe-for-startups">Google Ventures</a>.</p>
+  <h2 id="minimal-design-sprints">Minimal Design Sprints</h2>
+  <ul>
+    <li>Small Teams (i.e. 1–3)</li>
+    <li>One Day Sprint</li>
+  </ul>
+  <p>On small teams everyone develops and everyone designs. There is no research team or UX team. Ideas must achieve rapid validation, and get to development.</p>
+  <p>That why we do a <strong>minimal design sprint</strong>. It’s fast. For small projects this could be a few hours. For most projects this would be 1 or 2 days max.</p>
+  <h2 id="01-understand">01. Understand</h2>
+  <ul>
+    <li><strong>Deliverables:</strong> Project Brief</li>
+  </ul>
+  <p>This is where we go from “Let’s build a timer app” to “let’s build a workout timer for people using iPhones to do the <a href="http://well.blogs.nytimes.com/2013/05/09/the-scientific-7-minute-workout/">7-minute workout</a>”</p>
+  <p><strong>Why</strong> are we making this, <strong>who</strong> are we making this for, <strong>what problem</strong> are we solving, and <strong>when</strong> are we launching.</p>
+  <p>Go into some detail, but keep it brief.</p>
+  <pre><code class="hljs apache"><span class="hljs-comment"># Consider an Elevator Pitch: https://agilewarrior.wordpress.com/2010/11/06/the-agile-inception-deck</span>
+
+<span class="hljs-keyword">For</span><span class="hljs-sqbracket"> [target customer]</span>
+<span class="hljs-keyword">Who</span><span class="hljs-sqbracket"> [Statement of Need or opportunity]</span>
+<span class="hljs-keyword">the</span><span class="hljs-sqbracket"> [Product Name]</span>
+<span class="hljs-keyword">is</span> a<span class="hljs-sqbracket"> [product category]</span>
+<span class="hljs-keyword">that</span><span class="hljs-sqbracket"> [key benefit/reason to buy]</span>
+<span class="hljs-keyword">unlike</span><span class="hljs-sqbracket"> [competition]</span>
+<span class="hljs-keyword">our</span> product<span class="hljs-sqbracket"> [statement of primary differentiation]</span>
+</code></pre>
+  <h2 id="02-individual-brainstorming">02. Individual Brainstorming</h2>
+  <ul>
+    <li><strong>Deliverables:</strong> Lots of possible solutions</li>
+  </ul>
+  <p>We’ll individually map our way through the app; how it would make sense to us. This should be done in whatever tools are most comfortable for the individual, as long as they are: lo-fi, quick, and user-focused.</p>
+  <p>Our goal here is collect potential narratives of how the app/website/project should work.</p>
+  <p>Some possible techniques:</p>
+  <ul>
+    <li>Flowcharts Showing <a href="http://robots.thoughtbot.com/design-spiking#httpimagesthoughtbotcomdesignspikingsketchpathpng">Critical Path</a>, <a href="http://robots.thoughtbot.com/project-retro-reserve-a-game#WtdTds-indicator">Process</a>, etc.
+      <br><img src="http://com-ryanlabouve-blog.s3.amazonaws.com/add-word-critical-path-annotated.jpg" alt="Critical Path Example of Add Word Feature"></li>
+    <li><a href="https://signalvnoise.com/posts/1926-a-shorthand-for-designing-ui-flows">UI Flow Shorthand</a><img src="http://com-ryanlabouve-blog.s3.amazonaws.com/ui-flow.jpg" alt="UI Flow Example"></li>
+    <li>Personas Doodles</li>
+    <li><a href="http://robots.thoughtbot.com/the-product-design-sprint#httpimagesthoughtbotcomtheproductdesignsprintstoryboardjpg">Storyboards</a><img src="http://com-ryanlabouve-blog.s3.amazonaws.com/storyboard.jpg" alt="Story Board Example"></li>
+    <li><a href="http://www.fastcodesign.com/1672917/the-8-steps-to-creating-a-great-storyboard">Whatever makes sense to you</a></li>
+  </ul>
+  <p>It’s important to emphasize that the goal here is for <em>individuals</em> to brainstorm. Not to group brainstorm.</p>
+  <h2 id="03-group-convergence">03. Group Convergence</h2>
+  <ul>
+    <li><strong>Deliverables:</strong> UI Flows and Storyboards</li>
+  </ul>
+  <blockquote>
+    <p>Best ideas win. Doesn’t matter if its design from your lead UX designer, an engineer, or your Grandma</p>
+  </blockquote>
+  <p>The goal here is to throw out all but the best ideas.</p>
+  <p>This is ideally a democratic process, but it will look different for each group. If there are multiple good options, awesome. Take each one of them to prototype.</p>
+  <h2 id="04-prototype">04. Prototype</h2>
+  <ul>
+    <li><strong>Deliverables:</strong> “Goldilocks” fidelity prototypes</li>
+  </ul>
+  <p>We’re going for “goldilocks level fidelity”; just good enough to suspend disbelief.</p>
+  <p>Tools:</p>
+  <ul>
+    <li><a href="http://bohemiancoding.com/sketch/">Sketch</a> + <a href="https://www.google.com/webhp?sourceid=chrome-instant&amp;ion=1&amp;espv=2&amp;ie=UTF-8#q=sketch%20ui%20kit">a ui kit</a></li>
+    <li>Keynote + <a href="http://keynotopia.com/">Keynotopia</a></li>
+    <li><a href="http://www.slideshare.net/pboersma/good-design-faster-at-ux-sofia">Pen, Paper, and Sharpies</a> (or <a href="http://www.slideshare.net/pubsmith/sketching-interfaces-workshop-interactions12-dublin?related=1">this</a>)</li>
+    <li><a href="http://getbootstrap.com/">Bootstrap HTML Prototype</a></li>
+    <li><a href="http://balsamiq.com/products/mockups/">Balsamic</a></li>
+  </ul>
+  <h2 id="05-validate">05. Validate</h2>
+  <ul>
+    <li><strong>Deliverables:</strong> The Way Forward</li>
+  </ul>
+  <p>Test cheap and fast. Test with moms and dads, significant other, boy friends, girl friends… whoever will give some feedback.</p>
+  <p>Keep in mind, you’re not necessarily asking them what to do. You’re trying to measure the potential success of your ideas.</p>
+  <blockquote>
+    <p>If I would have asked people what they wanted, they would have said “a father horse” —Henry Ford</p>
+  </blockquote>
+  <p>How can we measure an idea’s success? From GV’s <a href="http://www.gv.com/lib/how-to-choose-the-right-ux-metrics-for-your-product">HEART framework</a>— Happiness, Engagement, Adoption, Retention, Task Success— we can really focus on a) task success
+    and b) engagement.</p>
+  <p>Out of testing you should have a direction to go. Sometimes it’s exactly what you thought. Other times you will be surprised. And sometimes you’ll end up back to the drawing board— and that’s ok.</p>
+  <blockquote>
+    <p>“With design sprints, you either win or your learn. You don’t lose.” —Someone on one of Googles videos</p>
+  </blockquote>
+  <h2 id="additional-resources">Additional Resources</h2>
+  <ul>
+    <li>
+      <p><a href="http://robots.thoughtbot.com/the-product-design-sprint">ThoughtBot: Product Design Sprint</a></p>
+    </li>
+    <li>
+      <p><a href="http://www.gv.com/lib/the-product-design-sprint-a-five-day-recipe-for-startups">Google Ventures</a></p>
+    </li>
+    <li>
+      <p><a href="http://franciscortez.com/design-sprint/">Francis Cortez: Design Sprint</a></p>
+    </li>
+  </ul>
+</div>
