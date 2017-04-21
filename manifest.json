@@ -1,6 +1,6 @@
 [
   {
-    "title": "Don\'t Overthink Retina",
+    "title": "Don't Overthink Retina",
     "slug": "dont-overthink-retina",
     "content": "articles/dont-overthink-retina.html",
     "description": "With a few simple changes to how we handle our web graphics we can prepare for the retina…",
@@ -44,7 +44,7 @@
   {
     "title": "Ember Problems, Connecting to Rails-API",
     "slug": "ember-problems-connecting-rails-api",
-    "description": "Working with the front end is fun, but sometimes you just gotta have more firepower. Let\"s hookup to a rails api.",
+    "description": "Working with the front end is fun, but sometimes you just gotta have more firepower. Let's hookup to a rails api.",
     "content": "articles/ember-problems-connecting-rails-api.html",
     "date": "January 29, 2015"
   },
@@ -65,14 +65,14 @@
   {
     "title": "Ember Problems, Pagination with an API",
     "slug": "ember-problems-pagination-with-api",
-    "description": "When you have truckloads of data, you can\'t just have once massive payload. Let\"s talk about how to paginate.",
+    "description": "When you have truckloads of data, you can't just have once massive payload. Let's talk about how to paginate.",
     "content": "articles/ember-problems-pagination-with-api.html",
     "date": "September 26, 2015"
   },
   {
     "title": "Ember Problems Infiniscroll with an API",
     "slug": "ember-problems-infiniscroll-with-api",
-    "description": "When you don\'t want to click next use infiniscroll to load in data smootly",
+    "description": "When you don't want to click next use infiniscroll to load in data smootly",
     "content": "articles/ember-problems-infiniscroll-with-api.html",
     "date": "September 27, 2015"
   },
