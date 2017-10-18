@@ -117,5 +117,12 @@
     "description": "A tour through the addons I use in every Ember projects. Specifically addons that change how I structure and write Ember applications.",
     "content": "articles/embers-bark.html",
     "date": "2017-01-08"
+  },
+  {
+    "title": "Using Async/Await with Node",
+    "slug": "using-async-await-with-node",
+    "description": "How to use async/await with core Node modules that prefer the callback pattern",
+    "content": "articles/async-await-with-node.html",
+    "date": "2017-10-18"
   }
 ]

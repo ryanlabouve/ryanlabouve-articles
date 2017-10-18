@@ -1,0 +1,90 @@
+<h1><a id="Using_AyncAwait_with_Core_Node_modules_0"></a>Using Aync/Await with Core Node modules</h1>
+<p><code>async</code> / <code>await</code> has transformed our codebase at work. Previously nested and messy sections have been transformed to be structured and easy to read.</p>
+<p>Moving back to do some work with Node, I wanted to apply the same pattern. Initially I was stumped because many of the core Node utils still use callbacks to handle asynchronous functions.</p>
+<p>The goal of this article is to walk through how I worked through  using <code>async</code> / <code>await</code> with core Node modules.</p>
+<h3><a id="Async_via_callback_8"></a>Async via callback</h3>
+<p>Traditional Node programs made heavy use of callbacks as a way to handle async.</p>
+<pre><code>// This is really hard to read &amp; think about because
+// you have deep nesting and lots of jumping around.
+const fs = require('fs');
+
+let getDataFromFile = (callback) =&gt; {
+  fs.readFile('sample.txt', 'utf-8', function(error, data) {
+    if (error) {
+      throw error;
+    }
+    callback(data);
+  });
+}
+
+getDataFromFile((data) =&gt; {
+  console.log(data);
+});
+</code></pre>
+<p>It’s not possible to <code>async</code> / <code>await</code> with callbacks!</p>
+<p>Instead we could wrap the whole method in a promise.</p>
+<h3><a id="Async_via_promises_35"></a>Async via promises</h3>
+<pre><code>const fs = require('fs');
+
+let getDataFromFile = () =&gt; {
+  return new Promise((resolve, reject) =&gt; {
+    fs.readFile('sample.txt', 'utf-8', function(error, data) {
+      if (error) {
+        reject(error);
+      }
+      resolve(data);
+    });
+  });
+}
+
+getDataFromFile().then((data) =&gt; {
+  console.log(&quot;Data!&quot;, data);
+}).catch((error) =&gt; {
+  console.log(&quot;Error!&quot;, error);
+});
+</code></pre>
+<p>Even though we have made our code more complicated, it is now compatible with <code>async</code> / <code>await</code>!</p>
+<p>This method of wrapping callback function with promises could be fully automated though. In fact, there is a Node utility function that does just this: <a href="https://nodejs.org/api/util.html#util_util_promisify_original">promisify</a></p>
+<p>Let’s re-write our example using <code>promisify</code>.</p>
+<h3><a id="Async_via_promisify_64"></a>Async via promisify</h3>
+<pre><code>const { promisify } = require('util');
+const fs = require('fs');
+const readFile = promisify(fs.readFile);
+
+let getDataFromFile = () =&gt; {
+  return readFile('sample.txt', 'utf-8');
+}
+
+getDataFromFile().then((data) =&gt; {
+  console.log(&quot;Data!&quot;, data);
+}).catch((error) =&gt; {
+  console.log(&quot;Error!&quot;, error);
+});
+</code></pre>
+<p>Much better! Promisify has made our code much easier to read.</p>
+<p>Now let’s async/await!</p>
+<h3><a id="Async_with_async__await_86"></a>Async with <code>async</code> / <code>await</code></h3>
+<pre><code>const { promisify } = require('util');
+const fs = require('fs');
+const readFile = promisify(fs.readFile);
+
+let getDataFromFile = async function() {
+  return await readFile('sample.txt', 'utf-8');
+}
+
+let init = async () =&gt; {
+  try {
+    let data = await getDataFromFile()
+    console.log(data);
+  } catch(error) {
+    console.log(error);
+  }
+};
+
+// Have to use `await` syntax in an async function
+init();
+</code></pre>
+<p>Ta-da! We are now able to use <code>async</code> / <code>await</code> with any callback based module.</p>
+<h2><a id="Why_this_is_important_112"></a>Why this is important</h2>
+<p>One of my main complaints with <code>node</code> is that it’s historically  to deeply nested code that jumps around. Now that we can minimize that via <code>async</code> / <code>await</code> I feel like the available developer ergonomic gains are massive and Node seems like a lot more fun to write.</p>
+<p>Hope this helps!</p>
