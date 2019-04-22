@@ -1,14 +1,18 @@
 # To my kiddos: Life and you are a tower
 
-> Something is important to you right now. Very important. Really doesn't matter.
+Something is important to you right now. Very important. It doesn't matter.
 
-> I mean it matters to you. But it doesn't matter for you. It doesn't _matter_.
+I mean it matters to you right now. But it doesn't matter for you. It won't in a year. It doesn't matter.
 
 The rise and fall of nations. Everything starts small. Fields. Then a wall. Brick by brick something emerges. Something large. Big. Too big to fall. Until it falls.
 
-Rome. After conquering EVERY NATION, it was saced by a rabble of barbarians.
+> Every man is a God until they realize they are just a man. — Me
 
-As we grow, we face larger and larger challenges. But we neglect the very foundations. The further we conquer, the more likely something small keeps us from reaching dominion.
+Rome after conquering EVERY NATION was sacked by a rabble of barbarians.
+
+As we grow, we face larger and larger challenges but we neglect the very foundations. The further we conquer, the more likely something small sacks us.
+
+---
 
 The foundation of life is a tower— floors building each other to a building: Eternity, health, finances, family, work, and hobbies.
 
@@ -29,9 +33,10 @@ Each of these adjectives are the strongest tool I can reommend to give strength 
 
 ## 1. Contemplate Eternity
 
-Eons have passed before you, and you were in darkenss. Eons will go beyond you, and you will be in darkness again. Conciousness is a strange and terrible gift.
+Eons have passed before you, and you were in darkenss. Eons will go beyond you, and you will be in darkness again. Conciousness is a strange and terrible gift. And you don't spend any time contemplating this. You go about your days like you will last forever.
 
-Our story is a story, but it's up to each of us to decide what this means in the light of eternity.
+> “The Wheel of Time turns, and Ages come and pass, leaving memories that become legend. Legend fades to myth, and even myth is long forgotten when the Age that gave it birth comes again. In one Age, called the Third Age by some, an Age yet to come, an Age long past, a wind rose above the great mountainous island of Tremalking. The wind was not the beginning. There are neither beginnings nor endings to the Wheel of Time. But it was a beginning.”
+> — Robert Jordan
 
 [Memento Mori. A token by which to remember that we will die]
 
