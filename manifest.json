@@ -149,5 +149,12 @@
     "src": "src/productivity-in-chaos-i-zero-mind.md",
     "content": "articles/productivity-in-chaos-i-zero-mind.html",
     "date": "2019-02-12"
+  },
+  {
+    "title": "Auth in Ember and Rails",
+    "slug": "auth-with-ember-and-rails",
+    "description": "EmberConf 2019 talk about Auth in Ember and Rails",
+    "content": "articles/auth-with-ember-and-rails.html",
+    "date": "2019-05-15"
   }
 ]
