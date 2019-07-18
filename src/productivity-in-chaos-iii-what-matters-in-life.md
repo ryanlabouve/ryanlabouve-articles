@@ -1,3 +1,7 @@
+---
+draft: true
+---
+
 ## Efficacy in chaos: What matters in life
 
 Days are units not sufficient. But they are the only way we have to move towards our big goals.
@@ -7,31 +11,33 @@ Productivity doesn't matter if your life is empty and meaningless.
 Don't work for the end of the month.
 
 Foundational things
-* Your deep belifs
-* Your fitness
-* Your finances
+
+- Your deep belifs
+- Your fitness
+- Your finances
 
 Functional things
-* Your family
-* Your job
-* Your home
+
+- Your family
+- Your job
+- Your home
 
 Bonus Things
-* Your hobbies
+
+- Your hobbies
 
 ## Foundational Things
+
 ### Deep Beliefs
+
 > "In this world nothing can be said to be certain, except death and taxes. — Benjamin Franklin
-Meaning is up to us. 
+> Meaning is up to us.
 
 There were countless centurys before us, and will be countless after.
-
 
 ### Fitness
 
 ### Finances
-
-
 
 ## Your System, How to Ignore New Tasks
 
@@ -49,12 +55,12 @@ There are MANY oppinions of how to best implement this. So I'll go over the main
 
 Personally I use [Getting Things Done](https://www.amazon.com/Getting-Things-Done-Stress-Free-Productivity/dp/0143126563/ref=sr_1_2?ie=UTF8&qid=1547510993&sr=8-2&keywords=getting+things+done).
 
-* Intake
+- Intake
   _ Triage them: prioritize
   _ Get them done eventually
-* Omnifocus Inbox: A place to put new things
-* Omnifocus Projects: Organize related todos
-* Omnifocus Contexts: A way to partition the type of work you are doing
+- Omnifocus Inbox: A place to put new things
+- Omnifocus Projects: Organize related todos
+- Omnifocus Contexts: A way to partition the type of work you are doing
 
 ### Process the inbox of Omnifocus, daily
 
@@ -76,11 +82,11 @@ If I dropped an extra 15 or 30 minutes in your lap, you should instantly know wh
 
 For me, as I mentioned before, I have these general buckets:
 
-* work
-* home
-* side-projects
-* consume
-* Ticklr
+- work
+- home
+- side-projects
+- consume
+- Ticklr
 
 ---
 
@@ -106,9 +112,9 @@ vs.
 
 My day is a constant onslaught of request, new needs, conversations. And this is great! BUT it's impossible to get things done if I am not very careful.
 
-* Breaking tasks into small actionable chunks
-* Minimize the time build up context
-* Acknolwedge, Triage, ETA
+- Breaking tasks into small actionable chunks
+- Minimize the time build up context
+- Acknolwedge, Triage, ETA
 
 ---
 
