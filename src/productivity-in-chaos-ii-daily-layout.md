@@ -1,44 +1,59 @@
-# Efficacy in chaos: Layout your day
+# Being effective in chaos
 
-My day is a constant onslaught of request, new needs, conversations. And this is great! BUT it's impossible to get things done if I am not very careful.
+My day is a constant onslaught of requests, needs, conversations, and interuptions. I am not productive if I don't plan carefully.
 
-Hitting a [0 state](#) is just the first step. 
+Hitting a [0 state](http://ryanlabouve.com/productivity-in-chaos-i-zero-mind) is just the first step.
 
-Next:
+Here's what I do next (note, this will be different for you):
 
-1.  Start a scratch doc. This is your external harddrive for the day
-2. Scan your schedule to determine twf you have to do
-3. Flag 3 things you must do today
+1. Create a scratch doc for the day
+
+2. Scan schedule and add meetings to scratch doc
+
+   2b. Cancel every meeting you can
+
+3. Read quarterly plan for timelines / projects. (i.e. get perspetive on macro objectives).
+
+   - Add valuable notes / concerns to scratch doc
+
+4. Scan Pivotal to figure out what folks are working on and what's coming next (i.e. get micro objectives)
+
+   - Add valuable notes / concerns to scratch doc
+
+5. Flag 3 things you must do today
+
+   - I have a running list in omnifocus with things I need to do.
 
 ## Scratch Doc
 
-As a manager, the last thing I want to do is show up for something unpreparred. I hate wasting the time of my engineers or collegues. My main method of ensuring that I don't waste their time is the scratch doc
+I hate showing up unpreparred. It wasts the time of my coworkers.
 
-**What it is—** The scratch doc is my manifest of the day. If I'm doing research, it's a running log of what I've tried. If I have a meeting, it's the prep notes and the notes I take from the meeting. It has links to any useful spreadsheet/PR/doc that I've used that day.
+Haivng notes before you step into any meeting (i.e. on the scratch doc) is the easiest way to avoid this.
 
-> At the end of every day I migrate my notes from `ByWord` to `Evernote` in one large file. From this I can always reference old notes.
+**The scratch doc** is my manifest of the day. If I'm researching, it's a running log of what I've tried. If I have a meeting, it has the prep notes and the notes I take from the meeting. It has links to any useful spreadsheet/PR/doc that I've used that day.
+
+> At the end of every day I migrate my notes from `MarkdownEditor` to `NotesAsAService` in one large file. From this I can always reference old notes.
 
 ## Scratch from Schedule
 
 After I do my 0's, the next thing I do is walk through my calendar for the day, and make notes on every important meeting I have.
 
-* **Interviews** Preparing for interviews helps them go well. Collect all relevant docs in one place (e.g. resume, question bank). And take some time to review a candidate's CV ahead of time and make notes. Then, during the interview you can also jot notes down.
+Here's a few examples:
 
-* **Meetings** Every meeting should have a purpose. If it doesn't, instead of adding it to the scratch doc, cancel the meeting. Otherwise, log the purpose, all relevant links (e.g. specs, spreadsheets, etc) and take some notes about your current views on the subject and anything top of mind. Throughout the day, when you have ideas related to the meeting just add them to the scratch doc.
+- **Interviews** Preparing for interviews helps them go well. Collect all relevant docs in one place (e.g. resume, question bank). And take some time to review a candidate's CV ahead of time and make notes. Then, during the interview you can also jot notes down.
 
-* **1:1's** My direct reports are the most important part of my job. As a manager my job is to work with others to facilitate changes for the company. I have much more to say about these, but being preparred for a 1:1 is the easiest way to help your direct report feel respected, important, and heard. Look through what they've been assigned to do. Make notes on PR's, tickets, etc. Don't have them waste the time telling you what they've been doing. 
+- **Meetings** Every meeting should have a purpose. If it doesn't, instead of adding it to the scratch doc, cancel the meeting. Otherwise, log the purpose, all relevant links (e.g. specs, spreadsheets, etc) and take some notes about your current views on the subject and anything top of mind. Throughout the day, when you have ideas related to the meeting just add them to the scratch doc.
+
+- **1:1's** Being preparred for a 1:1 is the an easy way to help your direct report feel respected, important, and heard. Look through what they've been assigned to do. Make notes on PR's, tickets, etc. Don't have them waste the time telling you what they've been doing.
 
 ## Then add your top 3 to Scratch
 
 > Pick battles big enough to matter, small enough to win. —Jonathan Kozol
 
-If I dropped an extra 15 or 30 minutes in your lap, you should instantly know what you want to work on. That's the glory of listing 3 prioritized actions on your scratch list.
+If an extra 15 or 30 minutes in mylap, I should instantly know what to work on. That's the point of listing 3 prioritized actions on the scratch list.
 
-> “The secret of getting ahead is getting started. The secret of getting started is breaking your complex overwhelming tasks into small, manageable tasks, and then starting on the first one. —Mark Twain”
+Some caveats:
 
-* Breaking tasks into small actionable chunks when you log them
+- This take should be a well defined action. (i.e. "clear surfaces in kitcen" over "clean up")
 
-* Minimize the time build up context by adding relevant details by your actions. You don't have to get religious about this, but just enough to drop you into flow asap.
-
-* Acknolwedge, Triage, and get back to work when things come up and you are engaged.
-
+- Minimize the time build up context by adding relevant details by your actions. You don't have to get religious about this, but just enough to drop you into flow asap.
