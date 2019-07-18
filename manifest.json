@@ -3,96 +3,83 @@
     "title": "Don't Overthink Retina",
     "slug": "dont-overthink-retina",
     "content": "articles/dont-overthink-retina.html",
-    "description":
-      "With a few simple changes to how we handle our web graphics we can prepare for the retina…",
+    "description": "With a few simple changes to how we handle our web graphics we can prepare for the retina…",
     "date": "2014-11-01"
   },
   {
     "title": "Sophisticating Your CSS",
     "slug": "sophisticating-your-css",
     "content": "articles/sophisticating-your-css.html",
-    "description":
-      "CSS is our way to style the web CSS is easy to write, but hard to write well…",
+    "description": "CSS is our way to style the web CSS is easy to write, but hard to write well…",
     "date": "2014-11-16"
   },
   {
     "title": "Gulp for CSS: Up and Running",
     "slug": "gulp-for-css-pt1",
     "content": "articles/gulp-for-css-pt1.html",
-    "description":
-      "Setting up Gulp Separate authoring stylesheets from production stylesheets Automating Some Basic SASS things I recently evangelized using…",
+    "description": "Setting up Gulp Separate authoring stylesheets from production stylesheets Automating Some Basic SASS things I recently evangelized using…",
     "date": "2014-11-24"
   },
   {
     "title": "Gulp for CSS: Getting Sophisticated",
     "slug": "gulp-for-css-pt2",
-    "description":
-      "Different development and production stylesheets Development: easy to debug Production: minified Start automating repetitive tasks I recently evangelized…",
+    "description": "Different development and production stylesheets Development: easy to debug Production: minified Start automating repetitive tasks I recently evangelized…",
     "content": "articles/gulp-for-css-pt2.html",
     "date": "2014-11-27"
   },
   {
     "title": "TodoMVC with Ember-CLI",
     "slug": "todomvc-ember-cli",
-    "description":
-      "Get started with Ember-CLI by building TodoMVC. This is a long screencast, but we’ll build the whole thing:…",
+    "description": "Get started with Ember-CLI by building TodoMVC. This is a long screencast, but we’ll build the whole thing:…",
     "content": "articles/todomvc-ember-cli.html",
     "date": "2014-12-01"
   },
   {
     "title": "Embracing Minimal Design Sprints",
     "slug": "embracing-minimal-design-sprints",
-    "description":
-      "“Weeks of programming can save you hours of planning” —Unknown We are all drunk with power. We can…",
+    "description": "“Weeks of programming can save you hours of planning” —Unknown We are all drunk with power. We can…",
     "content": "articles/embracing-minimal-design-sprints.html",
     "date": "2014-12-20"
   },
   {
     "title": "Ember Problems, Connecting to Rails-API",
     "slug": "ember-problems-connecting-rails-api",
-    "description":
-      "Working with the front end is fun, but sometimes you just gotta have more firepower. Let's hookup to a rails api.",
+    "description": "Working with the front end is fun, but sometimes you just gotta have more firepower. Let's hookup to a rails api.",
     "content": "articles/ember-problems-connecting-rails-api.html",
     "date": "2015-01-29"
   },
   {
     "title": "Maturing Development In 10 Abysmally Hard but Amazing Steps",
     "slug": "maturing-development-in-10-abysmally-hard-but-amazing-steps",
-    "description":
-      "Working at a startup tought me some things about development that have changed everything for me.",
-    "content":
-      "articles/maturing-development-in-10-abysmally-hard-but-amazing-steps.html",
+    "description": "Working at a startup tought me some things about development that have changed everything for me.",
+    "content": "articles/maturing-development-in-10-abysmally-hard-but-amazing-steps.html",
     "date": "2015-04-18"
   },
   {
     "title": "Blogging with Metalsmith",
     "slug": "blogging-with-metalsmith",
-    "description":
-      "Blogging with wordpress sucked. So, I switched to metalpress.",
+    "description": "Blogging with wordpress sucked. So, I switched to metalpress.",
     "content": "articles/blogging-with-metalsmith.html",
     "date": "2015-09-19"
   },
   {
     "title": "Ember Problems, Pagination with an API",
     "slug": "ember-problems-pagination-with-api",
-    "description":
-      "When you have truckloads of data, you can't just have once massive payload. Let's talk about how to paginate.",
+    "description": "When you have truckloads of data, you can't just have once massive payload. Let's talk about how to paginate.",
     "content": "articles/ember-problems-pagination-with-api.html",
     "date": "2015-09-26"
   },
   {
     "title": "Ember Problems Infiniscroll with an API",
     "slug": "ember-problems-infiniscroll-with-api",
-    "description":
-      "When you don't want to click next use infiniscroll to load in data smootly",
+    "description": "When you don't want to click next use infiniscroll to load in data smootly",
     "content": "articles/ember-problems-infiniscroll-with-api.html",
     "date": "2015-09-27"
   },
   {
     "title": "JWT Rails API Challenge",
     "slug": "jwt-rails-api-challenge",
-    "description":
-      "Quick and simple Rails API that is JSON API compliant and has secure resources (via JWT) and non-secure resources.",
+    "description": "Quick and simple Rails API that is JSON API compliant and has secure resources (via JWT) and non-secure resources.",
     "content": "articles/jwt-rails-api-challenge.html",
     "date": "2016-04-12"
   },
@@ -106,8 +93,7 @@
   {
     "title": "Ember Blog with JWT and Ember Simple Auth, Part 2",
     "slug": "ember-blog-with-jwt-and-esa-2",
-    "description":
-      "Setup Ember Simple Auth and connect to Rails API for our toy blog",
+    "description": "Setup Ember Simple Auth and connect to Rails API for our toy blog",
     "content": "articles/ember-blog-with-jwt-and-esa-2.html",
     "date": "2016-04-18"
   },
@@ -128,24 +114,21 @@
   {
     "title": "Ember Addons I Use Every Time",
     "slug": "embers-addons-i-use-every-time",
-    "description":
-      "A tour through the addons I use in every Ember projects. Specifically addons that change how I structure and write Ember applications.",
+    "description": "A tour through the addons I use in every Ember projects. Specifically addons that change how I structure and write Ember applications.",
     "content": "articles/embers-bark.html",
     "date": "2017-01-08"
   },
   {
     "title": "Using Async/Await with Node",
     "slug": "using-async-await-with-node",
-    "description":
-      "How to use async/await with core Node modules that prefer the callback pattern",
+    "description": "How to use async/await with core Node modules that prefer the callback pattern",
     "content": "articles/async-await-with-node.html",
     "date": "2017-10-18"
   },
   {
     "title": "Productivity in Chaos: Zero Mind",
     "slug": "productivity-in-chaos-i-zero-mind",
-    "description":
-      "Fight chaos. Get things done everyday. Don't lose your mind.",
+    "description": "Fight chaos. Get things done everyday. Don't lose your mind.",
     "src": "src/productivity-in-chaos-i-zero-mind.md",
     "content": "articles/productivity-in-chaos-i-zero-mind.html",
     "date": "2019-02-12"
@@ -156,5 +139,13 @@
     "description": "EmberConf 2019 talk about Auth in Ember and Rails",
     "content": "articles/auth-with-ember-and-rails.html",
     "date": "2019-05-15"
+  },
+  {
+    "title": "Productivity in Chaos: The Scratch Doc",
+    "slug": "productivity-in-chaos-ii-the-scratch-doc",
+    "description": "Simple recipe to stay on track when everything crazy around you.",
+    "src": "src/productivity-in-chaos-ii-daily-layout.md",
+    "content": "articles/productivity-in-chaos-ii-the-scratch-doc.html",
+    "date": "2019-02-12"
   }
 ]
