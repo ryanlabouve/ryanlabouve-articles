@@ -26,11 +26,11 @@ Here's what I do next (note, this will be different for you):
 
 ## Scratch Doc
 
-I hate showing up unpreparred. It wasts the time of my coworkers.
+I hate showing up unpreparred. It wastes the time everyone's time when I am unpreparred.
 
-Haivng notes before you step into any meeting (i.e. on the scratch doc) is the easiest way to avoid this.
+Haivng notes before stepping into any meeting is the easiest way to avoid this.
 
-**The scratch doc** is my manifest of the day. If I'm researching, it's a running log of what I've tried. If I have a meeting, it has the prep notes and the notes I take from the meeting. It has links to any useful spreadsheet/PR/doc that I've used that day.
+**The scratch doc** is my manifest of the day. It's notes for every plannign meeting. If I'm researching, it's a running log of what I've tried. If I have a meeting, it has the prep notes and the notes I take from the meeting. It has links to any useful spreadsheet/PR/doc that I've used that day.
 
 > At the end of every day I migrate my notes from `MarkdownEditor` to `NotesAsAService` in one large file. From this I can always reference old notes.
 
