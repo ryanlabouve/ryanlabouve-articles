@@ -22,12 +22,12 @@ Failure in light of a strong tower is a lesson. Failure in your tower brings eve
 
 Here's how I recommend approaching each one.
 
-1. _Contemplate_ Eternity
-2. _Optimize_ your health
-3. _Control_ your finances
-4. _Spend time with_ your family
-5. _Set boundaries_ around work
-6. _Have_ a hobby
+1.  _Contemplate_ Eternity
+2.  _Optimize_ your health
+3.  _Control_ your finances
+4.  _Spend time with_ your family
+5.  _Set boundaries_ around work
+6.  _Have_ a hobby
 
 Each of these adjectives are the strongest tool I can reommend to give strength to your tower.
 
@@ -52,9 +52,9 @@ Contemplate eterntity. This should be the start of your journey. As it will also
 
 There will be obstacles. You will be missing an arm or an eye. Things will break. There will be deficienties. Don't forcus on perfection. Take what you have and make it better. Control what you can. And then use what you have to overcome the rest.
 
-- _Don't be obese_ — This is chronically bad. And it's something you can control.
-- _Be strong (in your own way)_ —
-- _Don't be afraid to challenge your body, just don't ruin it_ —
+* _Don't be obese_ — This is chronically bad. And it's something you can control.
+* _Be strong (in your own way)_ —
+* _Don't be afraid to challenge your body, just don't ruin it_ —
 
 ## 3. Control your finances
 
@@ -62,11 +62,11 @@ There will be obstacles. You will be missing an arm or an eye. Things will break
 
 You will always be stressed until you have 3-6 months in the bank and control of your monthly budget. Some view this as a nusiance or a chore to be put off. But this is a duty. Your budget it more important most other things. Get it right. Use it to navigate your life.
 
-- Income is a stream, but your financies should be a body of water.
-- Spend some, save some, give some
-- Debt is categorically dumb. If you get in it, getting out of it is your top prioirty. Interest is when you pay rent on money.
-- Play the long game with finances. Build assets. Limit liabilities.
-- Live off of money you have (and proove this with a budget)
+* Income is a stream, but your financies should be a body of water.
+* Spend some, save some, give some
+* Debt is categorically dumb. If you get in it, getting out of it is your top prioirty. Interest is when you pay rent on money.
+* Play the long game with finances. Build assets. Limit liabilities.
+* Live off of money you have (and proove this with a budget)
 
 ## 4. Spend time with your family
 
@@ -82,9 +82,9 @@ This is why it's very important to be intentional with the scope that you give w
 
 I love working late. I love working hard. But I have also regretted working through certain periods of my life where work has effected my health (see Optimize Your Health).
 
-- Do everything that matters before you start working
-- Have time carved out for your family that is a minimum req
-- Have a bed time
+* Do everything that matters before you start working
+* Have time carved out for your family that is a minimum req
+* Have a bed time
 
 There will be exceptions. But exceptions will always want to become the rule.
 
@@ -97,3 +97,11 @@ Do stupid things.
 Build your life the best you can. As the stroms of life come against you, be confidency, follow your heart, be careful, and always always always be yourself.
 
 The tower is at the beggining and the end of our life. It's not the purpose. But I guess it is. We have to be prepared for the journey of life. This is only a beginning. And eventually the only thing you'll have left. Good luck.
+
+> _May I always remember embracing you in my arms, rocking you to sleep._
+
+> So often did I shepherd you from one plane to the next. As God does for me every night
+
+> My love is a shadow of a greater that rests forever on you. May you always perceive it.
+
+> And my I always remember the blessing of having been God’s shadow over you. It is the great joy of my life.
