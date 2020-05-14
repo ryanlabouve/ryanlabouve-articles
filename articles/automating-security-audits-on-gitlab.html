@@ -1,0 +1,76 @@
+<p><em>Something&#39;s running on port 3000</em>. </p>
+<p>I finally got tired of finding the same stack overflow article for <em>how to clear ports on OSX</em> and made a <a href="https://gitlab.com/ryanlabouve/dport">small CLI</a> to help (e.g. <code>dport 3000</code> ⇒ port is clear)</p>
+<p>Dport has not been updated it in years, but I still use it frequently.</p>
+<p>To take a bit of stewardship over the repo I decided to setup some automated security scans on Gitlab and wanted to share that process.</p>
+<h2 id="setup-gitlab-ci">Setup Gitlab CI</h2>
+<p>When upgrading dependencies, it&#39;s important to test the changes against your test suite. Otherwise a benign minor version bump could lead to an outage for one of your users.</p>
+<p>We&#39;ll automate this with <a href="https://docs.gitlab.com/ee/ci/">Gitlab CI</a>. First <code>touch .gitlab-ci.yml</code> and add a job to run your test suit like this:</p>
+<pre><code class="lang-yaml"><span class="hljs-comment"># Heavily borrowed from [https://gitlab.com/gitlab-org/gitlab-foss/-/blob/master/lib/gitlab/ci/templates/Nodejs.gitlab-ci.yml](https://gitlab.com/gitlab-org/gitlab-foss/-/blob/master/lib/gitlab/ci/templates/Nodejs.gitlab-ci.yml)</span>
+
+<span class="hljs-comment"># Official framework image. Look for the different tagged releases at:</span>
+<span class="hljs-comment"># https://hub.docker.com/r/library/node/tags/</span>
+<span class="hljs-attr">image:</span> node:latest
+
+<span class="hljs-comment"># This folder is cached between builds</span>
+<span class="hljs-comment"># http://docs.gitlab.com/ce/ci/yaml/README.html#cache</span>
+<span class="hljs-attr">cache:</span>
+<span class="hljs-attr">  paths:</span>
+<span class="hljs-bullet">    -</span> node_modules/
+
+<span class="hljs-comment"># Run the tests. If one fails it will interupt your build.</span>
+<span class="hljs-attr">test_async:</span>
+<span class="hljs-attr">  script:</span>
+<span class="hljs-bullet">    -</span> npm install
+<span class="hljs-bullet">    -</span> npm test
+</code></pre>
+<p>When we create the merge request, we can now see a pass/fail status for our tests.</p>
+<p><img src="http://com-ryanlabouve-blog.s3.amazonaws.com/Automating%20security%20audits%20on%20Gitlab%202bb5aaaae36f4d8da397f2deeb667d57/_dport__GitLab_2020-05-13_22-43-15.png" alt="Automating%20security%20audits%20on%20Gitlab%202bb5aaaae36f4d8da397f2deeb667d57/_dport__GitLab_2020-05-13_22-43-15.png"></p>
+<h2 id="vulnerability-scanning">Vulnerability Scanning</h2>
+<p>The first big security check we&#39;ll do is for dependencies with known vulnerabilities. This is the easiest way for security issues to sneak into your project.</p>
+<p>Gitlab offers this <a href="https://gitlab.com/gitlab-org/gitlab/blob/master/lib/gitlab/ci/templates/Security/Dependency-Scanning.gitlab-ci.yml">as a template</a>:</p>
+<pre><code class="lang-yaml"># <span class="hljs-selector-class">.gitlab-ci</span><span class="hljs-selector-class">.yml</span>
+<span class="hljs-selector-tag">include</span>:
+  <span class="hljs-selector-tag">-</span> <span class="hljs-selector-tag">template</span>: <span class="hljs-selector-tag">Dependency-Scanning</span><span class="hljs-selector-class">.gitlab-ci</span><span class="hljs-selector-class">.yml</span>
+</code></pre>
+<p>Read more about this <a href="https://gitlab.com/gitlab-org/gitlab/blob/master/lib/gitlab/ci/templates/Security/Dependency-Scanning.gitlab-ci.yml">specific template</a> or learn how to <a href="https://hodovi.cc/blog/creating-templates-for-gitlab-ci-jobs/">make your own templates</a>.</p>
+<p>Now we are scanning vulnerabilities on every push! (Looks like I need to make a few patches on Dport 😱)</p>
+<p><img src="http://com-ryanlabouve-blog.s3.amazonaws.com/Automating%20security%20audits%20on%20Gitlab%202bb5aaaae36f4d8da397f2deeb667d57/_dport__GitLab_2020-05-13_21-34-58.png" alt="Automating%20security%20audits%20on%20Gitlab%202bb5aaaae36f4d8da397f2deeb667d57/_dport__GitLab_2020-05-13_21-34-58.png"></p>
+<h2 id="sast-and-other-scans">SAST and other scans</h2>
+<p>The next level of vulnerability scanning we&#39;ll do is Static application security testing (<a href="https://docs.gitlab.com/ee/user/application_security/index.html">SAST</a>). </p>
+<p>Gitlab also offers this via <a href="https://gitlab.com/gitlab-org/gitlab/blob/master/lib/gitlab/ci/templates/Security/SAST.gitlab-ci.yml">a template</a>:</p>
+<pre><code class="lang-yaml">include:
+    - template: SAST<span class="hljs-selector-class">.gitlab-ci</span><span class="hljs-selector-class">.yml</span>
+</code></pre>
+<p>This works by wrapping one of several language specific SAST tools. For this project its <code>nodejs-scan</code> since it&#39;s node. If it were a ruby project it would be <code>brakeman</code>. See a list of the analyzers <a href="https://gitlab.com/gitlab-org/gitlab/blob/master/lib/gitlab/ci/templates/Security/SAST.gitlab-ci.yml#L15">here</a>.</p>
+<h3 id="external-sast-tools">External SAST tools</h3>
+<p>It&#39;s also possible you might want to use an external SAST tool <a href="https://github.com/AppThreat/sast-scan">https://github.com/AppThreat/sast-scan</a>. Perhaps it offers additional configuration options or more customized reporting. </p>
+<p>Here&#39;s how we&#39;d use AppThread/sast-scan instead:</p>
+<pre><code class="lang-yaml"><span class="hljs-symbol">sast:</span>
+<span class="hljs-symbol">  stage:</span> test
+<span class="hljs-symbol">  image:</span>
+<span class="hljs-symbol">    name:</span> appthreat/sast-scan
+<span class="hljs-symbol">  script:</span>
+    - scan --src ${CI_PROJECT_DIR} --type nodejs --out_dir ${CI_PROJECT_DIR}/reports
+<span class="hljs-symbol">  artifacts:</span>
+<span class="hljs-symbol">    paths:</span>
+      - $CI_PROJECT_DIR<span class="hljs-meta-keyword">/reports/</span>nodejsscan-report.json
+</code></pre>
+<p>Learn more about <a href="https://appthreat.io/how-to-build-a-sast-tool/">how SAST works</a> and how you could build your own SAST tool.</p>
+<h3 id="other-scans">Other scans</h3>
+<p>Vulnerability and SAST were the two scans I felt would yield the most value for my project, but there&#39;s several other options. </p>
+<ul>
+<li><a href="https://docs.gitlab.com/ee/user/application_security/container_scanning/index.html">Container scanning</a></li>
+<li><a href="https://docs.gitlab.com/ee/user/application_security/dependency_scanning/index.html">Dependency scanning</a></li>
+<li><a href="https://docs.gitlab.com/ee/user/application_security/dast/index.html">Dynamic application security testing</a> (DAST)</li>
+<li><a href="https://docs.gitlab.com/ee/user/application_security/sast/index.html">Static application security testing</a> (SAST)</li>
+<li><a href="https://docs.gitlab.com/ee/user/compliance/license_compliance/index.html">License scanning</a> (for compliance)</li>
+<li><a href="https://docs.gitlab.com/ee/user/application_security/container_scanning/index.html">Container scanning](https://docs.gitlab.com/ee/user/application_security/container_scanning/index.html</a>)</li>
+</ul>
+<h2 id="gitlab-daily-scans-and-our-security-dashboard">Gitlab daily scans and our security dashboard</h2>
+<p>We&#39;ll want to scan master on a regular basis. It&#39;s possible that the results of our scans might change without us pushing new code (e.g. if a dependent package is involved with a CVE).</p>
+<p>To accomplish this we&#39;ll introduce a <code>daily build</code> on master via a <a href="https://docs.gitlab.com/ee/ci/pipelines/schedules.html">schedule</a>.</p>
+<p><img src="http://com-ryanlabouve-blog.s3.amazonaws.com/Automating%20security%20audits%20on%20Gitlab%202bb5aaaae36f4d8da397f2deeb667d57/_dport__GitLab_2020-05-13_22-35-03.png" alt="Automating%20security%20audits%20on%20Gitlab%202bb5aaaae36f4d8da397f2deeb667d57/_dport__GitLab_2020-05-13_22-35-03.png"></p>
+<p>We are also able to run this manually.</p>
+<p><img src="http://com-ryanlabouve-blog.s3.amazonaws.com/Automating%20security%20audits%20on%20Gitlab%202bb5aaaae36f4d8da397f2deeb667d57/_dport__GitLab_2020-05-13_22-36-36.png" alt="Automating%20security%20audits%20on%20Gitlab%202bb5aaaae36f4d8da397f2deeb667d57/_dport__GitLab_2020-05-13_22-36-36.png"></p>
+<p>After setting up some security scans we&#39;ll now have access to Gitlab&#39;s <a href="https://docs.gitlab.com/ee/user/application_security/index.html">security dashboard</a>. </p>
+<p><img src="http://com-ryanlabouve-blog.s3.amazonaws.com/Automating%20security%20audits%20on%20Gitlab%202bb5aaaae36f4d8da397f2deeb667d57/_dport__GitLab_2020-05-13_22-31-58.png" alt="Automating%20security%20audits%20on%20Gitlab%202bb5aaaae36f4d8da397f2deeb667d57/_dport__GitLab_2020-05-13_22-31-58.png"></p>

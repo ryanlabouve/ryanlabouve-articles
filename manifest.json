@@ -147,5 +147,12 @@
     "src": "src/productivity-in-chaos-ii-daily-layout.md",
     "content": "articles/productivity-in-chaos-ii-the-scratch-doc.html",
     "date": "2019-07-17"
+  },
+  {
+    "title": "Automating security audits on Gitlab",
+    "slug": "automating-security-audits-on-gitlab",
+    "description": "Keeping your projects safe, automated as part of your development process",
+    "content": "articles/automating-security-audits-on-gitlab.html",
+    "date": "2020-05-14"
   }
 ]
